@@ -57,6 +57,12 @@ test {
     }
 
     systemProperties(System.getProperties())
+
+    // Prevent AspectJ dump files
+    systemProperty 'org.aspectj.weaver.Dump.on_exception', 'false'
+    systemProperty 'org.aspectj.weaver.showWeaveInfo', 'false'
+    systemProperty 'org.aspectj.weaver.Dump', 'false'
+
     testLogging {
         events "passed", "skipped", "failed"
         exceptionFormat "full"
@@ -69,3 +75,24 @@ test {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+// Clean up AspectJ dump files
+tasks.register('cleanAjcoreDumps') {
+    doLast {
+        def ajcoreFiles = fileTree(rootDir) {
+            include 'ajcore*.txt'
+            depth = 0
+        }
+        ajcoreFiles.each { file ->
+            if (file.delete()) {
+                println "Deleted: ${file.name}"
+            }
+        }
+    }
+}
+
+// Run this task before test
+tasks.named('test') {
+    dependsOn 'cleanAjcoreDumps'
+}
+

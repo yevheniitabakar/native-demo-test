@@ -37,6 +37,12 @@ public abstract class BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void startDriver() {
         LOG.info("Starting Appium driver");
+
+        if (appiumConfig == null) {
+            throw new IllegalStateException("Configuration not loaded. BeforeSuite should have been executed.");
+        }
+
+        LOG.info("Creating driver for device: {}", appiumConfig.deviceName());
         DriverManager.createDriver(appiumConfig);
         LOG.info("Driver started successfully");
     }

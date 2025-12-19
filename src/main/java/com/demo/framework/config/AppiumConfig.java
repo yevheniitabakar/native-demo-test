@@ -4,7 +4,8 @@ import java.net.URI;
 import java.time.Duration;
 
 public record AppiumConfig(String platformName, String platformVersion, String deviceName, String automationName,
-                           String appPath, URI serverUrl, Duration newCommandTimeout) {
+                           String appPath, URI serverUrl, Duration newCommandTimeout,
+                           boolean fullReset, boolean noReset) {
 
     @Override
     public String toString() {
@@ -16,6 +17,8 @@ public record AppiumConfig(String platformName, String platformVersion, String d
                 ", appPath='" + appPath + '\'' +
                 ", serverUrl=" + serverUrl +
                 ", newCommandTimeout=" + newCommandTimeout +
+                ", fullReset=" + fullReset +
+                ", noReset=" + noReset +
                 '}';
     }
 

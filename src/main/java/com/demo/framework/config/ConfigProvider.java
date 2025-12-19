@@ -35,15 +35,41 @@ public class ConfigProvider {
      * Get Appium configuration
      */
     public AppiumConfig getAppiumConfig() {
+        String platformName = getRequired("platformName");
+        String appPath = getAppPathForPlatform(platformName);
+
         return new AppiumConfig(
-                getRequired("platformName"),
+                platformName,
                 getRequired("platformVersion"),
                 getRequired("deviceName"),
                 getRequired("automationName"),
-                properties.getProperty("app", ""),
+                appPath,
                 URI.create(getRequired("appiumServerUrl")),
-                Duration.ofSeconds(Long.parseLong(properties.getProperty("newCommandTimeout", "120")))
+                Duration.ofSeconds(Long.parseLong(properties.getProperty("newCommandTimeout", "120"))),
+                getBoolean("appium:fullReset", true),
+                getBoolean("appium:noReset", false)
         );
+    }
+
+    /**
+     * Get application path based on platform
+     */
+    private String getAppPathForPlatform(String platformName) {
+        if (platformName == null) {
+            throw new FrameworkException("Platform name must not be null");
+        }
+
+        String appPath = switch (platformName.toUpperCase()) {
+            case "ANDROID" -> properties.getProperty("app.android.path", "");
+            case "IOS" -> properties.getProperty("app.ios.path", "");
+            default -> throw new FrameworkException("Unsupported platform: " + platformName);
+        };
+
+        if (appPath.isBlank()) {
+            throw new FrameworkException("Application path not configured for platform: " + platformName);
+        }
+
+        return appPath;
     }
 
     /**

@@ -20,9 +20,12 @@ public class AndroidDriverProvider implements DriverFactory {
                 .setDeviceName(config.deviceName())
                 .setAutomationName(config.automationName())
                 .setApp(config.appPath())
-                .setNewCommandTimeout(config.newCommandTimeout());
+                .setNewCommandTimeout(config.newCommandTimeout())
+                .setFullReset(config.fullReset())
+                .setNoReset(config.noReset());
 
         LOG.info("Starting Android driver with capabilities for device: {}", config.deviceName());
+        LOG.info("Full Reset: {}, No Reset: {}", config.fullReset(), config.noReset());
         try {
             return new AndroidDriver(config.serverUrl().toURL(), options);
         } catch (Exception e) {
