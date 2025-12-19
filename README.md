@@ -6,7 +6,7 @@ Production-ready mobile test automation framework using Appium, Java 17, TestNG,
 
 | Component | Version |
 |-----------|---------|
-| Java | 17 |
+| Java | 21 |
 | TestNG | 7.10.2 |
 | Appium | 9.2.2 |
 | Gradle | 8.6 |
@@ -22,88 +22,80 @@ Production-ready mobile test automation framework using Appium, Java 17, TestNG,
 
 ## Key Features
 
-- **POM Architecture** with BasePage facade
+- **POM Architecture** with BasePage pattern
 - **Cross-platform** Android & iOS support
-- **Device Management** with ADB and xcrun
+- **Device Management** with ADB automation
 - **SOLID Principles** fully implemented
-- **Logging** via SLF4J + Logback
+- **Comprehensive Logging** via SLF4J + Logback
 - **Allure Reporting** with screenshots on failure
 - **ThreadLocal Drivers** for parallel execution
 
+## Test Scenarios
+
+**Scenario 1: Login Functionality**
+- TC_1.1: Successful Login
+- TC_1.2: Invalid Credentials
+- TC_1.3: Empty Fields
+
+**Scenario 2: Swipe/Gesture Actions**
+- TC_2.1: Swipe Through Carousel
+
+**Scenario 3: WebView Interaction**
+- TC_3.1: WebView Navigation
+
+**Scenario 4: Drag and Drop**
+- TC_4.1: Successful Interaction
+- TC_4.2: Element State Verification
+
 ## Configuration
 
-Edit `src/test/resources/config/appium.properties` to change platform, device, or app paths:
+Edit `src/test/resources/config/appium.properties`:
 
 ```properties
-platformName=Android                    # Android or iOS
-deviceName=Android Emulator             # Emulator/simulator name
-platformVersion=13                      # OS version
+platformName=Android
+deviceName=Android Emulator
+platformVersion=16
 appiumServerUrl=http://127.0.0.1:4723/wd/hub
 app.android.path=testApps/android/android.wdio.native.app.v1.0.8.apk
 app.ios.path=testApps/ios/Payload/wdiodemoapp.app
-```
-
-## Writing Tests
-
-```java
-public class LoginTest extends BaseTest {
-    @Test(description = "Valid login")
-    public void validLogin() {
-        LoginPage page = new LoginPage();
-        assertTrue(page.isPageLoaded());
-        page.login("user@test.com", "password");
-    }
-}
 ```
 
 ## Project Structure
 
 ```
 src/main/java/com/demo/framework/
-├── config/        - AppiumConfig, ConfigProvider
-├── drivers/       - DriverManager, DriverFactory, device management
-├── exceptions/    - FrameworkException
-├── pages/         - BasePage, HomePage, LoginPage
-└── utils/         - Wait, Action, Screenshot, Gesture, etc.
+├── config/        - Configuration providers
+├── drivers/       - Driver management, device managers
+├── exceptions/    - Framework exceptions
+├── pages/         - Page Objects
+└── utils/         - Utilities (Wait, Action, Gesture, Screenshot)
 
 src/test/java/com/demo/framework/
-├── tests/         - BaseTest, smoke/, regression/
-├── listeners/     - AllureTestListener
-└── annotations/   - @Retry, @CaptureOnFailure
+├── tests/smoke/   - Smoke test cases
+├── tests/regression/ - Regression test suites
+├── listeners/     - Allure test listeners
+└── annotations/   - Custom test annotations
 ```
 
-## Utilities
+## Running Tests
 
-**WaitUtils**: `untilVisible()`, `untilClickable()`, `untilPresent()`  
-**ActionUtils**: `click()`, `sendText()`, `getText()`  
-**GestureUtils**: `swipeLeft()`, `swipeRight()`, `tap()`  
-**ScreenshotUtils**: Automatic capture on failure  
+```bash
+# All tests
+./gradlew test
 
-## Device Management
+# Smoke tests only
+./gradlew test --tests "*.smoke.*"
 
-```java
-AndroidDeviceManager manager = new AndroidDeviceManager();
-List<DeviceInfo> devices = manager.getAvailableDevices();
-manager.startDevice("emulator-5554");
+# Regression tests only
+./gradlew test --tests "*.regression.*"
 ```
 
 ## Best Practices
 
-- Use Page Objects for all element interactions
-- Use explicit waits (WaitUtils), never Thread.sleep()
+- Use Page Objects for all interactions
+- Use explicit waits, never Thread.sleep()
 - Log all operations
-- Use TestDataUtils for test data generation
 - Add Allure annotations (@Feature, @Story, @Step)
 - Handle exceptions with FrameworkException
-
-## Documentation
-
-- **QUICKSTART.md** - Setup and first test
-- **PROJECT_STRUCTURE.md** - Architecture details
-- **COMMANDS.md** - Build and test commands
-- **CHECKLIST.md** - Feature checklist
-
----
-
-**Version**: 1.0.0 | **Status**: ✅ Production Ready
+- Take screenshots on failure
 
