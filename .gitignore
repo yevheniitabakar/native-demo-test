@@ -1,0 +1,28 @@
+.gradle/
+build/
+.idea/
+*.iml
+out/
+logs/
+screenshots/
+allure-results/
+allure-report/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test reports
+target/
+test-output/
+
+# Environment
+.env
+*.properties.local
+
