@@ -25,6 +25,7 @@ public class IOSDriverProvider implements DriverFactory {
                 .setNoReset(config.noReset());
 
         LOG.info("Starting iOS driver with capabilities for device: {}", config.deviceName());
+        LOG.info("Platform Version: {}, Automation: {}", config.platformVersion(), config.automationName());
         LOG.info("Full Reset: {}, No Reset: {}", config.fullReset(), config.noReset());
         try {
             return new IOSDriver(config.serverUrl().toURL(), options);

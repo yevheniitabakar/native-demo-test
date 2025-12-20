@@ -38,20 +38,79 @@ public class ConfigProvider {
      * Get Appium configuration
      */
     public AppiumConfig getAppiumConfig() {
-        String platformName = getRequired("platformName");
+        String platformName = getPlatformName();
         String appPath = getAppPathForPlatform(platformName);
 
         return new AppiumConfig(
                 platformName,
-                getRequired("platformVersion"),
-                getRequired("deviceName"),
-                getRequired("automationName"),
+                getPlatformVersion(platformName),
+                getDeviceName(platformName),
+                getAutomationName(platformName),
                 appPath,
                 URI.create(getRequired("appiumServerUrl")),
                 Duration.ofSeconds(Long.parseLong(properties.getProperty("newCommandTimeout", "120"))),
                 getBoolean("appium:fullReset", true),
                 getBoolean("appium:noReset", false)
         );
+    }
+
+    /**
+     * Get platform name from system property or default to Android
+     */
+    private String getPlatformName() {
+        String platformFromSystem = System.getProperty("platform");
+        if (platformFromSystem != null && !platformFromSystem.isBlank()) {
+            String normalized = platformFromSystem.trim().toUpperCase();
+            if ("ANDROID".equals(normalized) || "IOS".equals(normalized)) {
+                return normalized;
+            }
+        }
+        return getRequired("platformName");
+    }
+
+    /**
+     * Get device name based on platform
+     */
+    private String getDeviceName(String platformName) {
+        if (platformName == null) {
+            throw new FrameworkException("Platform name must not be null");
+        }
+
+        return switch (platformName.toUpperCase()) {
+            case "ANDROID" -> properties.getProperty("device.android.name", "Android Emulator");
+            case "IOS" -> properties.getProperty("device.ios.name", "iPhone 15");
+            default -> throw new FrameworkException("Unsupported platform: " + platformName);
+        };
+    }
+
+    /**
+     * Get platform version based on platform
+     */
+    private String getPlatformVersion(String platformName) {
+        if (platformName == null) {
+            throw new FrameworkException("Platform name must not be null");
+        }
+
+        return switch (platformName.toUpperCase()) {
+            case "ANDROID" -> properties.getProperty("device.android.platformVersion", "14");
+            case "IOS" -> properties.getProperty("device.ios.platformVersion", "18.0");
+            default -> throw new FrameworkException("Unsupported platform: " + platformName);
+        };
+    }
+
+    /**
+     * Get automation name based on platform
+     */
+    private String getAutomationName(String platformName) {
+        if (platformName == null) {
+            throw new FrameworkException("Platform name must not be null");
+        }
+
+        return switch (platformName.toUpperCase()) {
+            case "ANDROID" -> properties.getProperty("device.android.automationName", "UiAutomator2");
+            case "IOS" -> properties.getProperty("device.ios.automationName", "XCUITest");
+            default -> throw new FrameworkException("Unsupported platform: " + platformName);
+        };
     }
 
     /**

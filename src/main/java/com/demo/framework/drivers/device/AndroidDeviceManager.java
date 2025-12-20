@@ -111,6 +111,26 @@ public class AndroidDeviceManager implements IDeviceManager {
     }
 
     @Override
+    public boolean isDeviceBooted(String udid) {
+        LOG.debug("Checking if device is booted: {}", udid);
+        try {
+            String output = executeCommand(ADB_COMMAND, "devices");
+            // Device is booted if it appears in adb devices list with "device" status
+            String[] lines = output.split("\n");
+            for (String line : lines) {
+                if (line.contains(udid) && line.contains("device")) {
+                    // Verify it's not offline
+                    return !line.contains("offline");
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            LOG.error("Error checking if device is booted", e);
+            return false;
+        }
+    }
+
+    @Override
     public String getPlatformType() {
         return PLATFORM_TYPE;
     }

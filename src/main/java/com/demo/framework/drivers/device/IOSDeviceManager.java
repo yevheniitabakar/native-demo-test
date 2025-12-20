@@ -131,6 +131,25 @@ public class IOSDeviceManager implements IDeviceManager {
     }
 
     @Override
+    public boolean isDeviceBooted(String udid) {
+        LOG.debug("Checking if iOS simulator is booted: {}", udid);
+        try {
+            String output = executeCommand(XCRUN_COMMAND, SIMCTL_SUBCOMMAND, "list", "devices");
+            // Device is booted if it has "(Booted)" in its status
+            String[] lines = output.split("\n");
+            for (String line : lines) {
+                if (line.contains(udid) && line.contains("(Booted)")) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            LOG.error("Error checking if simulator is booted", e);
+            return false;
+        }
+    }
+
+    @Override
     public String getPlatformType() {
         return PLATFORM_TYPE;
     }

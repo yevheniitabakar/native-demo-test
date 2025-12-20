@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 echo "=========================================="
 echo "Mobile Test Automation Framework Runner"
 echo "=========================================="
@@ -13,30 +11,46 @@ PLATFORM="${1:-android}"
 if [[ "$PLATFORM" != "android" && "$PLATFORM" != "ios" ]]; then
     echo "❌ Invalid platform: $PLATFORM"
     echo "Usage: ./run_tests.sh [android|ios]"
-    echo "Or: ./gradlew test -Dplatform=android|ios"
+    echo "Example: ./run_tests.sh android"
     exit 1
 fi
 
 echo "Target platform: $PLATFORM"
 
-# Check Device Availability
+# Check and Start Device
 echo ""
-echo "1. Checking device availability..."
+echo "1. Checking device for platform: $PLATFORM..."
+
+# Make device-manager.sh executable
+chmod +x scripts/device-manager.sh
 
 if [ "$PLATFORM" = "android" ]; then
-    adb devices
-    EMULATOR_COUNT=$(adb devices | grep -c "emulator")
-    if [ "$EMULATOR_COUNT" -eq 0 ]; then
-        echo "❌ No Android emulator running"
-        echo "Please start an Android emulator before running tests"
-        exit 1
+    echo "Checking Android emulator..."
+    if ! bash scripts/device-manager.sh android check; then
+        echo "❌ No Android emulator is booted. Attempting to start..."
+        if bash scripts/device-manager.sh android start; then
+            echo "✓ Android emulator started successfully"
+        else
+            echo "❌ Failed to start Android emulator"
+            echo "Available Android emulators:"
+            bash scripts/device-manager.sh android list
+            exit 1
+        fi
     fi
     echo "✓ Android emulator is ready"
+
 elif [ "$PLATFORM" = "ios" ]; then
-    if ! xcrun simctl list | grep -q "Booted"; then
-        echo "❌ No iOS simulator running"
-        echo "Please start an iOS simulator before running tests"
-        exit 1
+    echo "Checking iOS simulator..."
+    if ! bash scripts/device-manager.sh ios check; then
+        echo "❌ No iOS simulator is booted. Attempting to start..."
+        if bash scripts/device-manager.sh ios start; then
+            echo "✓ iOS simulator started successfully"
+        else
+            echo "❌ Failed to start iOS simulator"
+            echo "Available iOS simulators:"
+            bash scripts/device-manager.sh ios list
+            exit 1
+        fi
     fi
     echo "✓ iOS simulator is ready"
 fi
@@ -47,12 +61,19 @@ echo "2. Checking Appium Server..."
 if ! curl -s http://127.0.0.1:4723/status > /dev/null 2>&1; then
     echo "⚠️  Appium server not running. Starting Appium..."
     nohup appium --log-level warn > /tmp/appium.log 2>&1 &
+    APPIUM_PID=$!
     sleep 8
+
+    if ! curl -s http://127.0.0.1:4723/status > /dev/null 2>&1; then
+        echo "❌ Failed to start Appium server"
+        exit 1
+    fi
 fi
+
 if curl -s http://127.0.0.1:4723/status > /dev/null 2>&1; then
     echo "✓ Appium server is ready"
 else
-    echo "❌ Failed to start Appium server"
+    echo "❌ Appium server is not responding"
     exit 1
 fi
 
@@ -63,35 +84,71 @@ echo "3. Installing app on device..."
 if [ "$PLATFORM" = "android" ]; then
     APK_PATH="testApps/android/android.wdio.native.app.v1.0.8.apk"
     if [ -f "$APK_PATH" ]; then
-        EMULATOR_ID=$(adb devices | grep emulator | head -1 | awk '{print $1}')
-        if [ ! -z "$EMULATOR_ID" ]; then
+        EMULATOR_ID=$(adb devices | grep "emulator" | awk '{print $1}' | head -1 || true)
+        if [ -n "$EMULATOR_ID" ]; then
             echo "Installing app on $EMULATOR_ID..."
-            adb -s "$EMULATOR_ID" install -r "$APK_PATH" || echo "App might already be installed"
-            echo "✓ App installed"
+            if adb -s "$EMULATOR_ID" install -r "$APK_PATH" > /dev/null 2>&1; then
+                echo "✓ App installed successfully"
+            else
+                echo "⚠️  App install warning (may already exist)"
+            fi
         else
-            echo "❌ Could not find emulator ID"
+            echo "❌ Could not find active emulator"
             exit 1
         fi
     else
         echo "❌ App file not found: $APK_PATH"
         exit 1
     fi
+
 elif [ "$PLATFORM" = "ios" ]; then
-    echo "ℹ️  iOS app installation handled by Appium"
+    IPA_PATH="testApps/ios/Payload/wdiodemoapp.app"
+    if [ -d "$IPA_PATH" ]; then
+        SIMULATOR_UDID=$(xcrun simctl list devices | grep "(Booted)" | sed 's/.*(\([A-F0-9\-]*\).*Booted.*/\1/' | head -1 || true)
+        if [ -n "$SIMULATOR_UDID" ]; then
+            echo "Installing app on iOS Simulator: $SIMULATOR_UDID..."
+            if xcrun simctl install "$SIMULATOR_UDID" "$IPA_PATH" > /dev/null 2>&1; then
+                echo "✓ App installed successfully"
+            else
+                echo "⚠️  App install warning (may already exist)"
+            fi
+
+            echo "Launching app on iOS Simulator..."
+            BUNDLE_ID="org.reactjs.native.example.wdiodemoapp"
+            if xcrun simctl launch "$SIMULATOR_UDID" "$BUNDLE_ID" > /dev/null 2>&1; then
+                echo "✓ App launched"
+            else
+                echo "⚠️  App launch warning"
+            fi
+        else
+            echo "❌ Could not find booted iOS simulator"
+            exit 1
+        fi
+    else
+        echo "❌ App directory not found: $IPA_PATH"
+        exit 1
+    fi
 fi
 
-# Build and run tests
+# Run tests with error handling
 echo ""
-echo "4. Building and running tests..."
-./gradlew clean build
+echo "4. Running tests for platform: $PLATFORM..."
+echo "Sequential test execution (thread-count=1) ensures consistent device state"
+echo "=========================================="
 
-echo ""
-echo "5. Running tests for platform: $PLATFORM..."
+set -e
 ./gradlew test -Dplatform="$PLATFORM"
+EXIT_CODE=$?
 
 echo ""
 echo "=========================================="
-echo "✓ Test execution completed"
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "✓ Test execution completed successfully"
+else
+    echo "❌ Test execution failed with exit code: $EXIT_CODE"
+fi
 echo "=========================================="
+
+exit $EXIT_CODE
 
 

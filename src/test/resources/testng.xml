@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Native Demo Suite" parallel="tests" thread-count="2">
+<suite name="Native Demo Suite" parallel="tests" thread-count="1">
     <listeners>
-        <!-- Allure TestNG listener -->
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-        <!-- Custom test listener for logging and screenshots -->
         <listener class-name="com.demo.framework.listeners.AllureTestListener"/>
     </listeners>
 
@@ -12,15 +10,10 @@
     <test name="Smoke">
         <classes>
             <class name="com.demo.framework.tests.smoke.SampleTest"/>
+            <class name="com.demo.framework.tests.smoke.LoginTest"/>
+            <class name="com.demo.framework.tests.smoke.CarouselTest"/>
+            <class name="com.demo.framework.tests.smoke.WebViewTest"/>
+            <class name="com.demo.framework.tests.smoke.DragDropTest"/>
         </classes>
     </test>
-
-    <!-- Regression Tests (optional, for future use) -->
-    <!--
-    <test name="Regression">
-        <classes>
-            <class name="com.demo.framework.tests.regression.SampleRegressionTest"/>
-        </classes>
-    </test>
-    -->
 </suite>

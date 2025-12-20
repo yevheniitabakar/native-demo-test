@@ -34,6 +34,11 @@ public interface IDeviceManager {
     boolean isDeviceConnected(String udid);
 
     /**
+     * Check if device is booted (currently running)
+     */
+    boolean isDeviceBooted(String udid);
+
+    /**
      * Get platform type
      */
     String getPlatformType();

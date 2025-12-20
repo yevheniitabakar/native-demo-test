@@ -9,11 +9,13 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
+    jcenter()
+    maven { url "https://repo.maven.apache.org/maven2/" }
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -36,7 +38,9 @@ dependencies {
     runtimeOnly 'ch.qos.logback:logback-classic:1.5.6'
 
     // Reporting - Allure
-    testImplementation 'io.qameta.allure:allure-testng:2.27.0'
+    testImplementation('io.qameta.allure:allure-testng:2.27.0') {
+        exclude group: 'io.qameta.allure', module: 'allure-java-commons'
+    }
     testImplementation 'io.qameta.allure:allure-java-commons:2.27.0'
     implementation 'io.qameta.allure:allure-java-commons:2.27.0'
 
@@ -62,10 +66,10 @@ test {
     def platform = System.getProperty('platform', 'android')
     systemProperty 'platform', platform
 
-    // Prevent AspectJ dump files
-    systemProperty 'org.aspectj.weaver.Dump.on_exception', 'false'
-    systemProperty 'org.aspectj.weaver.showWeaveInfo', 'false'
-    systemProperty 'org.aspectj.weaver.Dump', 'false'
+    // JVM settings
+    jvmArgs = [
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
+    ]
 
     testLogging {
         events "passed", "skipped", "failed"
@@ -73,29 +77,68 @@ test {
     }
 
     // Allure reports directory
-    systemProperty 'allure.results.directory', "${buildDir}/allure-results"
+    systemProperty 'allure.results.directory', "${layout.buildDirectory.asFile.get()}/allure-results"
+
+    // Pre-test device availability check
+    doFirst {
+        println "=========================================="
+        println "Checking device availability..."
+        println "=========================================="
+
+        def deviceCheckScript = new File(rootDir, 'scripts/device-manager.sh')
+        if (!deviceCheckScript.exists()) {
+            throw new GradleException("Device manager script not found: ${deviceCheckScript.absolutePath}")
+        }
+
+        def checkCommand = ["bash", deviceCheckScript.absolutePath, platform, "check"]
+        def process = checkCommand.execute()
+        def output = process.text
+        def exitCode = process.waitFor()
+
+        println output
+
+        if (exitCode != 0) {
+            throw new GradleException("""
+========================================
+Device not available for $platform
+========================================
+Please ensure that:
+1. $platform device/emulator is booted
+2. For direct Gradle execution, use: ./run_tests.sh $platform
+   (This script automatically starts the device if needed)
+========================================
+""")
+        }
+
+        println "✓ Device is available. Proceeding with tests..."
+        println "=========================================="
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-// Clean up AspectJ dump files
-tasks.register('cleanAjcoreDumps') {
+
+// Copy environment properties to allure results
+tasks.register('copyEnvironmentToAllure') {
     doLast {
-        def ajcoreFiles = fileTree(rootDir) {
-            include 'ajcore*.txt'
-        }
-        ajcoreFiles.each { file ->
-            if (file.delete()) {
-                println "Deleted: ${file.name}"
+        def allureResultsDir = file("${layout.buildDirectory.asFile.get()}/allure-results")
+        allureResultsDir.mkdirs()
+
+        def envPropsFile = file('src/test/resources/environment.properties')
+        if (envPropsFile.exists()) {
+            copy {
+                from envPropsFile
+                into allureResultsDir
             }
+            println "Copied environment.properties to allure-results"
         }
     }
 }
 
-// Run this task before test
+// Run these tasks before test
 tasks.named('test') {
-    dependsOn 'cleanAjcoreDumps'
+    dependsOn 'copyEnvironmentToAllure'
 }
 
