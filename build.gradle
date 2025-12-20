@@ -58,6 +58,10 @@ test {
 
     systemProperties(System.getProperties())
 
+    // Add platform parameter
+    def platform = System.getProperty('platform', 'android')
+    systemProperty 'platform', platform
+
     // Prevent AspectJ dump files
     systemProperty 'org.aspectj.weaver.Dump.on_exception', 'false'
     systemProperty 'org.aspectj.weaver.showWeaveInfo', 'false'
@@ -81,7 +85,6 @@ tasks.register('cleanAjcoreDumps') {
     doLast {
         def ajcoreFiles = fileTree(rootDir) {
             include 'ajcore*.txt'
-            depth = 0
         }
         ajcoreFiles.each { file ->
             if (file.delete()) {

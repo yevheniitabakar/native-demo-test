@@ -62,6 +62,7 @@ public class DriverManager {
         if (driver != null) {
             try {
                 LOG.info("Quitting driver and releasing resources");
+                LOG.info("Note: If fullReset=true was set, app will be uninstalled from device");
                 driver.quit();
                 LOG.info("Driver quit successfully");
             } catch (Exception e) {

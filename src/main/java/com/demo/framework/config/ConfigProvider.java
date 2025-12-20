@@ -5,6 +5,9 @@ import com.demo.framework.exceptions.FrameworkException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Properties;
@@ -69,7 +72,29 @@ public class ConfigProvider {
             throw new FrameworkException("Application path not configured for platform: " + platformName);
         }
 
-        return appPath;
+        return convertToAbsolutePath(appPath);
+    }
+
+    /**
+     * Convert relative path to absolute path
+     */
+    private String convertToAbsolutePath(String appPath) {
+        Path path = Paths.get(appPath);
+
+        // If already absolute, return as is
+        if (path.isAbsolute()) {
+            if (!Files.exists(path)) {
+                throw new FrameworkException("Application file not found: " + appPath);
+            }
+            return path.toString();
+        }
+
+        // Convert relative path to absolute
+        Path absolutePath = path.toAbsolutePath();
+        if (!Files.exists(absolutePath)) {
+            throw new FrameworkException("Application file not found: " + absolutePath);
+        }
+        return absolutePath.toString();
     }
 
     /**
