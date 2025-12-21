@@ -14,7 +14,6 @@ import java.util.Properties;
 
 /**
  * Configuration provider for loading and managing application configuration
- * Implements Single Responsibility Principle: only responsible for config loading
  */
 public class ConfigProvider {
 
@@ -52,6 +51,13 @@ public class ConfigProvider {
                 getBoolean("appium:fullReset", true),
                 getBoolean("appium:noReset", false)
         );
+    }
+
+    /**
+     * Get current platform (Android or iOS)
+     */
+    public String getPlatform() {
+        return getPlatformName();
     }
 
     /**

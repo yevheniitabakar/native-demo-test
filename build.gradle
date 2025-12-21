@@ -55,8 +55,11 @@ dependencies {
 }
 
 test {
+    // Get suite file from system property or use default
+    def suiteFile = System.getProperty('suiteXmlFile', 'testng.xml')
+
     useTestNG() {
-        suites 'src/test/resources/testng.xml'
+        suites "src/test/resources/${suiteFile}"
         useDefaultListeners = true
     }
 
@@ -135,6 +138,12 @@ tasks.register('copyEnvironmentToAllure') {
             println "Copied environment.properties to allure-results"
         }
     }
+}
+
+// Clean Allure results before test run
+tasks.register('cleanAllureResults', Delete) {
+    delete "${layout.buildDirectory.asFile.get()}/allure-results"
+    delete "${layout.buildDirectory.asFile.get()}/reports/allure-report"
 }
 
 // Run these tasks before test

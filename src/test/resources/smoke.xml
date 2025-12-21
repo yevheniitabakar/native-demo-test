@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Native Demo Suite" parallel="none">
+<suite name="Smoke Suite" parallel="none">
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
         <listener class-name="com.demo.framework.listeners.AllureTestListener"/>
     </listeners>
 
-    <test name="All Tests">
+    <test name="Smoke Tests">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
         <packages>
             <package name="com.demo.framework.tests.*"/>
         </packages>
     </test>
 </suite>
+

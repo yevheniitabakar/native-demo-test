@@ -14,103 +14,108 @@ Production-ready mobile test automation framework using Appium, Java 17, TestNG,
 
 ## Features
 
-- **SOLID Principles** design patterns
-- **POM Architecture** with BasePage pattern
-- **Cross-platform Support** Android & iOS
-- **Sequential Test Execution** (thread-count=1) for reliable device state
-- **ThreadLocal Driver Management** for thread-safe access
-- **Comprehensive Logging** SLF4J + Logback
+- **SOLID Principles** and design patterns
+- **Layered Architecture**: Tests → Flows → Page Interfaces → Platform Implementations
+- **Cross-platform Support**: Android & iOS with platform-specific Page Objects
+- **PageFactory Pattern**: Automatic platform resolution
+- **TestNG Groups**: smoke, regression, login, swipe, webview, drag
 - **Allure Reporting** with environment details and screenshots
-- **Platform-Specific Device Validation** before test execution
+- **Comprehensive Logging**: SLF4J + Logback
 
 ## Prerequisites
 
-### Device Requirements
-
-- **Using run_tests.sh**: Android SDK or Xcode required. Script auto-starts emulator/simulator if not booted.
-- **Using Gradle directly**: Device/emulator/simulator must be pre-booted before test execution.
-- **Appium Server**: Auto-started by run_tests.sh
-
-### System Setup
-
-1. Install Java 17
-2. Install Android SDK (for Android testing)
-3. Install Xcode (for iOS testing on macOS)
-4. Install Appium: `npm install -g appium`
-5. Ensure adb/xcrun are in PATH
+- Java 17
+- Android SDK (for Android) / Xcode (for iOS)
+- Appium: `npm install -g appium`
+- Appium drivers: `appium driver install uiautomator2` / `appium driver install xcuitest`
 
 ## Running Tests
 
-### Option 1: Using run_tests.sh (Recommended)
-
-Automatically manages device lifecycle - checks if device is booted, starts it if needed, installs app, and runs tests.
+### Using run_tests.sh (Recommended)
+Auto-manages device lifecycle (boots emulator/simulator if needed).
 
 ```bash
-# Android tests (emulator auto-start if not running)
-./run_tests.sh android
-
-# iOS tests (simulator auto-start if not running)
-./run_tests.sh ios
+./run_tests.sh android    # Android tests
+./run_tests.sh ios        # iOS tests
 ```
 
-### Option 2: Using Gradle Directly
-
-Requires device to be already booted. Only validates device availability, does not start it. Use this when:
-- Device/emulator/simulator is already running
-- You want direct control without device management
+### Using Gradle (Device must be booted)
 
 ```bash
-# Android tests (emulator must be booted)
-./gradlew test -Dplatform=android
-
-# iOS tests (simulator must be booted)
-./gradlew test -Dplatform=ios
+./gradlew test -Dplatform=android                               # All tests (default)
+./gradlew test -Dplatform=ios                                   # All iOS tests
+./gradlew test -Dplatform=android -DsuiteXmlFile=smoke.xml      # Smoke suite only
 ```
 
-## Test Scenarios
+## Test Suites
 
-| Scenario | Test Cases |
-|----------|-----------|
-| Login | TC_1.1 Successful Login, TC_1.2 Invalid Credentials, TC_1.3 Empty Fields |
-| Gestures | TC_2.1 Swipe Through Carousel |
-| WebView | TC_3.1 WebView Navigation |
-| Drag & Drop | TC_4.1 Successful Interaction, TC_4.2 Element State Verification |
+| Suite | File | Description |
+|-------|------|-------------|
+| Default | `testng.xml` | All tests |
+| Smoke | `smoke.xml` | Quick validation (group: smoke) |
 
-## Generate Allure Report
+## Test Scenarios & Groups
 
-```bash
-# Run tests first
-./gradlew test -Dplatform=android
+| Test Class | Groups | Test Cases |
+|------------|--------|------------|
+| `SampleTest` | smoke | Framework bootstrap sanity |
+| `LoginTests` | login, smoke, regression | TC_1.1-1.3: Login flows |
+| `SwipeTests` | swipe, smoke, regression | TC_2.1-2.3: Carousel swipe |
+| `WebViewTests` | webview, smoke, regression | TC_3.1-3.3: WebView navigation |
+| `DragAndDropTests` | drag, smoke, regression | TC_4.1-4.3: Drag & drop |
 
-# Generate and open Allure report
-./gradlew allureServe
+## Architecture
+
+```
+Test Classes (LoginTests, SwipeTests, WebViewTests, DragAndDropTests)
+       ↓
+Flow Layer (LoginFlow, SwipeFlow, WebViewFlow, DragAndDropFlow)
+       ↓
+Page Interfaces (HomePage, LoginPage, SwipePage, WebViewPage, DragPage)
+       ↓
+Platform Implementations (Android*/iOS*)
+       ↓
+PageFactory → Appium Driver
 ```
 
 ## Project Structure
 
 ```
 src/main/java/com/demo/framework/
-├── config/        Configuration management
-├── drivers/       Appium & device management
-├── pages/         Page Objects
-├── listeners/     Test listeners
-└── utils/         Utilities
+├── config/           Configuration management
+├── drivers/          Appium & device management
+├── flows/            Business action flows (LoginFlow, SwipeFlow, etc.)
+├── pages/
+│   ├── interfaces/   Page contracts (HomePage, LoginPage, etc.)
+│   ├── android/      Android implementations
+│   ├── ios/          iOS implementations
+│   ├── BasePage.java
+│   └── PageFactory.java
+└── utils/            Utilities
 
 src/test/java/com/demo/framework/
-├── tests/         Test cases
-└── listeners/     Allure reporting
+├── tests/            Feature-based test classes
+│   ├── smoke/        SampleTest
+│   ├── LoginTests.java
+│   ├── SwipeTests.java
+│   ├── WebViewTests.java
+│   └── DragAndDropTests.java
+└── listeners/        Allure reporting
 
-testApps/
-├── android/       Android APK
-└── ios/           iOS app bundle
+src/test/resources/
+├── smoke.xml         Smoke suite
+└── testng.xml        Default suite (all tests)
 ```
 
-## Architecture Highlights
+## Generate Allure Report
 
-- **Sequential Execution**: Tests run sequentially to maintain consistent device state
-- **Platform Isolation**: run_tests.sh validates only the specified platform device
-- **Device Checking**: Pre-execution validation ensures device is booted and ready
-- **Thread Safety**: ThreadLocal pattern for driver instance management
-- **Configuration Management**: Platform-specific properties in appium.properties
+```bash
+# Clean previous Allure results (recommended before new test run)
+./gradlew cleanAllureResults
 
+# Run tests
+./gradlew test -Dplatform=android
 
+# Generate and open Allure report
+./gradlew allureServe
+```

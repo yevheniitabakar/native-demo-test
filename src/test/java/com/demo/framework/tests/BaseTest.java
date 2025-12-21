@@ -18,7 +18,7 @@ import org.testng.annotations.BeforeSuite;
 public abstract class BaseTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(BaseTest.class);
-    private AppiumConfig appiumConfig;
+    private static AppiumConfig appiumConfig;
 
     /**
      * Load configuration before suite runs
@@ -27,7 +27,7 @@ public abstract class BaseTest {
     public void loadConfig() {
         LOG.info("Loading framework configuration");
         ConfigProvider provider = new ConfigProvider();
-        this.appiumConfig = provider.getAppiumConfig();
+        appiumConfig = provider.getAppiumConfig();
         LOG.info("Framework configuration loaded: {}", appiumConfig);
     }
 

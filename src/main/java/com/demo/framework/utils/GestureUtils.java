@@ -109,6 +109,22 @@ public class GestureUtils {
     }
 
     /**
+     * Scroll down the page (swipe up to reveal content below)
+     */
+    public void scrollDown() {
+        LOG.info("Scrolling down");
+        swipeUp();
+    }
+
+    /**
+     * Scroll up the page (swipe down to reveal content above)
+     */
+    public void scrollUp() {
+        LOG.info("Scrolling up");
+        swipeDown();
+    }
+
+    /**
      * Long press on element
      */
     public void longPress(By locator, int duration) {
