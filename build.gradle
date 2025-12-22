@@ -9,7 +9,6 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
-    jcenter()
     maven { url "https://repo.maven.apache.org/maven2/" }
 }
 
@@ -49,72 +48,23 @@ dependencies {
 
     // Utilities
     implementation 'commons-io:commons-io:2.14.0'
-
-    // Annotations
-    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 }
 
 test {
-    // Get suite file from system property or use default
     def suiteFile = System.getProperty('suiteXmlFile', 'testng.xml')
+    def platform = System.getProperty('platform', 'android')
 
     useTestNG() {
         suites "src/test/resources/${suiteFile}"
-        useDefaultListeners = true
     }
 
-    systemProperties(System.getProperties())
-
-    // Add platform parameter
-    def platform = System.getProperty('platform', 'android')
     systemProperty 'platform', platform
+    systemProperty 'allure.results.directory', "${layout.buildDirectory.asFile.get()}/allure-results"
 
-    // JVM settings
-    jvmArgs = [
-        '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
-    ]
+    jvmArgs = ['--add-opens', 'java.base/java.lang=ALL-UNNAMED']
 
     testLogging {
         events "passed", "skipped", "failed"
-        exceptionFormat "full"
-    }
-
-    // Allure reports directory
-    systemProperty 'allure.results.directory', "${layout.buildDirectory.asFile.get()}/allure-results"
-
-    // Pre-test device availability check
-    doFirst {
-        println "=========================================="
-        println "Checking device availability..."
-        println "=========================================="
-
-        def deviceCheckScript = new File(rootDir, 'scripts/device-manager.sh')
-        if (!deviceCheckScript.exists()) {
-            throw new GradleException("Device manager script not found: ${deviceCheckScript.absolutePath}")
-        }
-
-        def checkCommand = ["bash", deviceCheckScript.absolutePath, platform, "check"]
-        def process = checkCommand.execute()
-        def output = process.text
-        def exitCode = process.waitFor()
-
-        println output
-
-        if (exitCode != 0) {
-            throw new GradleException("""
-========================================
-Device not available for $platform
-========================================
-Please ensure that:
-1. $platform device/emulator is booted
-2. For direct Gradle execution, use: ./run_tests.sh $platform
-   (This script automatically starts the device if needed)
-========================================
-""")
-        }
-
-        println "✓ Device is available. Proceeding with tests..."
-        println "=========================================="
     }
 }
 
@@ -122,32 +72,9 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-
-// Copy environment properties to allure results
-tasks.register('copyEnvironmentToAllure') {
-    doLast {
-        def allureResultsDir = file("${layout.buildDirectory.asFile.get()}/allure-results")
-        allureResultsDir.mkdirs()
-
-        def envPropsFile = file('src/test/resources/environment.properties')
-        if (envPropsFile.exists()) {
-            copy {
-                from envPropsFile
-                into allureResultsDir
-            }
-            println "Copied environment.properties to allure-results"
-        }
-    }
-}
-
-// Clean Allure results before test run
 tasks.register('cleanAllureResults', Delete) {
     delete "${layout.buildDirectory.asFile.get()}/allure-results"
     delete "${layout.buildDirectory.asFile.get()}/reports/allure-report"
 }
 
-// Run these tasks before test
-tasks.named('test') {
-    dependsOn 'copyEnvironmentToAllure'
-}
 

@@ -2,16 +2,18 @@ package com.demo.framework.listeners;
 
 import com.demo.framework.utils.ScreenshotUtils;
 import io.qameta.allure.Allure;
-import io.qameta.allure.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 /**
  * TestNG Listener for Allure reporting and logging
- * Implements ITestListener to intercept test lifecycle events
  */
 public class AllureTestListener implements ITestListener {
 
@@ -23,115 +25,94 @@ public class AllureTestListener implements ITestListener {
         LOG.info("Starting Test Suite: {}", context.getName());
         LOG.info("========================================");
 
-        Allure.feature("Test Suite");
-        Allure.story(context.getName());
+        generateAllureEnvironment();
     }
 
     @Override
     public void onFinish(ITestContext context) {
         LOG.info("========================================");
         LOG.info("Finished Test Suite: {}", context.getName());
-        LOG.info("Total Tests Run: {}", context.getAllTestMethods().length);
-        LOG.info("Passed: {}", context.getPassedTests().size());
-        LOG.info("Failed: {}", context.getFailedTests().size());
-        LOG.info("Skipped: {}", context.getSkippedTests().size());
+        LOG.info("Passed: {}, Failed: {}, Skipped: {}",
+                context.getPassedTests().size(),
+                context.getFailedTests().size(),
+                context.getSkippedTests().size());
         LOG.info("========================================");
     }
 
     @Override
     public void onTestStart(ITestResult result) {
         LOG.info("------- Test Started: {} -------", result.getName());
-
-        String methodName = result.getMethod().getMethodName();
-        String className = result.getTestClass().getName();
-
-        Allure.feature(className);
-        Allure.story(methodName);
-        addTestParameters(result);
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        LOG.info("✓ Test PASSED: {}", result.getName());
-        addTestDuration(result);
+        LOG.info("✓ Test PASSED: {} ({}ms)", result.getName(), getTestDuration(result));
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         LOG.error("✗ Test FAILED: {}", result.getName());
-        LOG.error("Error message: {}", result.getThrowable().getMessage());
+        LOG.error("Error: {}", result.getThrowable().getMessage());
 
-        // Take screenshot on failure
         try {
             ScreenshotUtils.takeScreenshotOnFailure();
         } catch (Exception e) {
-            LOG.warn("Failed to take screenshot on test failure", e);
+            LOG.warn("Failed to take screenshot", e);
         }
 
-        // Add failure details to Allure
-        addFailureDetails(result);
-        addTestDuration(result);
+        addFailureAttachment(result);
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
         LOG.warn("⊘ Test SKIPPED: {}", result.getName());
-
-        if (result.getThrowable() != null) {
-            LOG.warn("Skip reason: {}", result.getThrowable().getMessage());
-        }
-
-        addTestDuration(result);
     }
 
-    @Override
-    public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-        LOG.warn("Test passed but within success percentage: {}", result.getName());
-    }
+    private void generateAllureEnvironment() {
+        String platform = System.getProperty("platform", "android");
+        String platformVersion = getPlatformVersion(platform);
 
-    /**
-     * Add test parameters to Allure report
-     */
-    @Step("Adding test parameters")
-    private void addTestParameters(ITestResult result) {
-        Object[] parameters = result.getParameters();
-        if (parameters != null && parameters.length > 0) {
-            for (int i = 0; i < parameters.length; i++) {
-                String paramName = "param_" + (i + 1);
-                String paramValue = String.valueOf(parameters[i]);
-                Allure.parameter(paramName, paramValue);
-                LOG.debug("Parameter: {} = {}", paramName, paramValue);
+        Properties props = new Properties();
+        props.setProperty("Platform", platform.toUpperCase());
+        props.setProperty("Platform.Version", platformVersion);
+
+        String allureResultsDir = System.getProperty("allure.results.directory", "build/allure-results");
+        try {
+            java.io.File dir = new java.io.File(allureResultsDir);
+            dir.mkdirs();
+            try (FileOutputStream fos = new FileOutputStream(allureResultsDir + "/environment.properties")) {
+                props.store(fos, null);
             }
+            LOG.info("Generated Allure environment: Platform={}, Version={}", platform.toUpperCase(), platformVersion);
+        } catch (IOException e) {
+            LOG.warn("Failed to generate Allure environment.properties", e);
         }
     }
 
-    /**
-     * Add failure details to Allure
-     */
-    @Step("Adding failure details")
-    private void addFailureDetails(ITestResult result) {
-        Throwable throwable = result.getThrowable();
-        if (throwable != null) {
-            StringBuilder failureDetails = new StringBuilder();
-            failureDetails.append("Exception: ").append(throwable.getClass().getName()).append("\n");
-            failureDetails.append("Message: ").append(throwable.getMessage()).append("\n");
-            failureDetails.append("Stack Trace:\n");
+    private String getPlatformVersion(String platform) {
+        if ("android".equalsIgnoreCase(platform)) {
+            return System.getProperty("device.android.platformVersion", "14");
+        } else if ("ios".equalsIgnoreCase(platform)) {
+            return System.getProperty("device.ios.platformVersion", "18.0");
+        }
+        return "unknown";
+    }
 
-            for (StackTraceElement element : throwable.getStackTrace()) {
-                failureDetails.append(element.toString()).append("\n");
+    private long getTestDuration(ITestResult result) {
+        return result.getEndMillis() - result.getStartMillis();
+    }
+
+    private void addFailureAttachment(ITestResult result) {
+        Throwable t = result.getThrowable();
+        if (t != null) {
+            StringBuilder details = new StringBuilder();
+            details.append("Exception: ").append(t.getClass().getName()).append("\n");
+            details.append("Message: ").append(t.getMessage()).append("\n\nStack Trace:\n");
+            for (StackTraceElement e : t.getStackTrace()) {
+                details.append(e.toString()).append("\n");
             }
-
-            Allure.addAttachment("Failure Details", "text/plain", failureDetails.toString());
+            Allure.addAttachment("Failure Details", "text/plain", details.toString());
         }
-    }
-
-    /**
-     * Add test duration to Allure
-     */
-    private void addTestDuration(ITestResult result) {
-        long duration = result.getEndMillis() - result.getStartMillis();
-        LOG.info("Test Duration: {} ms", duration);
-        Allure.parameter("Duration (ms)", String.valueOf(duration));
     }
 }
 

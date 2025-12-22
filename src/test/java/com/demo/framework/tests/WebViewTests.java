@@ -7,6 +7,7 @@ import io.qameta.allure.Story;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static com.demo.framework.utils.AllureStepUtils.allureStep;
 import static org.testng.Assert.*;
 
 /**
@@ -26,32 +27,26 @@ public class WebViewTests extends BaseTest {
         webViewFlow = new WebViewFlow();
     }
 
-    @Test(groups = {"webview", "smoke", "regression"},
+    @Test(groups = {"webview", "regression"},
           description = "TC_3.1: Verify WebView navigation and GitHub link")
     @Description("Navigate to WebView tab, verify content loads, tap View on GitHub button, verify browser opens with correct URL")
     public void testWebViewNavigation() {
-        LOG.info("Starting TC_3.1: WebView Navigation");
 
-        // Step 1: Navigate to WebView tab
-        LOG.info("Step 1: Navigate to WebView tab");
+        allureStep("Step 1: Navigate to WebView tab");
         webViewFlow.navigateToWebView();
         assertTrue(webViewFlow.isWebViewPageLoaded(), "WebView page should be loaded");
 
-        // Step 2: Wait for WebView to load completely
-        LOG.info("Step 2: Wait for WebView to load completely");
+        allureStep("Step 2: Wait for WebView to load completely");
         webViewFlow.waitForWebViewToLoad();
         assertTrue(webViewFlow.isWebViewDisplayed(), "WebView content should be displayed");
 
-        // Step 3: Verify page title or specific web element is present
-        LOG.info("Step 3: Verify page title or specific web element is present");
+        allureStep("Step 3: Verify page title or specific web element is present");
         assertTrue(webViewFlow.isWebViewContentPresent(), "WebView should display expected content");
 
-        // Step 4: Tap on the button 'View on GitHub'
-        LOG.info("Step 4: Tap on 'View on GitHub' button");
+        allureStep("Step 4: Tap on 'View on GitHub' button");
         webViewFlow.tapViewOnGitHubButton();
 
-        // Step 5: Verify that browser opened with URL: https://github.com/webdriverio
-        LOG.info("Step 5: Verify browser opened with GitHub URL");
+        allureStep("Step 5: Verify that browser opened with URL: " + GITHUB_URL);
         assertTrue(webViewFlow.isGitHubPageOpened(GITHUB_URL),
                    "Browser should open with URL: " + GITHUB_URL);
     }

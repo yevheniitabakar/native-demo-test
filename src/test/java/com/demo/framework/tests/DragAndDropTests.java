@@ -7,6 +7,7 @@ import io.qameta.allure.Story;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static com.demo.framework.utils.AllureStepUtils.allureStep;
 import static org.testng.Assert.*;
 
 /**
@@ -29,16 +30,18 @@ public class DragAndDropTests extends BaseTest {
           description = "TC_4.1: Verify successful drag and drop interaction")
     @Description("Verify user can drag an element to the drop zone successfully")
     public void testDragAndDropSuccessfulInteraction() {
-        LOG.info("Starting TC_4.1: Drag and Drop - Successful Interaction");
-
+        allureStep("Step 1: Navigate to Drag and Drop screen");
         dragAndDropFlow.navigateToDragAndDrop();
         assertTrue(dragAndDropFlow.isDragPageLoaded(), "Drag and Drop page should be loaded");
 
+        allureStep("Step 2: Verify draggable element and drop zone are visible");
         assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should be visible");
         assertTrue(dragAndDropFlow.isDropZoneVisible(), "Drop zone should be visible");
 
+        allureStep("Step 3: Drag element to drop zone");
         dragAndDropFlow.dragElementToDropZone();
 
+        allureStep("Step 4: Verify drag and drop was successful");
         assertTrue(dragAndDropFlow.isDropSuccessful(), "Drag and drop should be successful");
     }
 
@@ -46,17 +49,17 @@ public class DragAndDropTests extends BaseTest {
           description = "TC_4.2: Verify element state after drag and drop")
     @Description("Verify element state changes correctly after drag and drop")
     public void testDragAndDropElementStateVerification() {
-        LOG.info("Starting TC_4.2: Drag and Drop - Element State Verification");
-
+        allureStep("Step 1: Navigate to Drag and Drop screen");
         dragAndDropFlow.navigateToDragAndDrop();
         assertTrue(dragAndDropFlow.isDragPageLoaded(), "Drag and Drop page should be loaded");
 
-        // Verify initial state
+        allureStep("Step 2: Verify initial state - draggable element is visible");
         assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should be visible initially");
 
+        allureStep("Step 3: Drag element to drop zone");
         dragAndDropFlow.dragElementToDropZone();
 
-        // Verify state after drop
+        allureStep("Step 4: Verify state after drop - success message displayed");
         assertTrue(dragAndDropFlow.isDropSuccessful(), "Drop should be successful");
         assertNotNull(dragAndDropFlow.getSuccessMessage(), "Success message should be displayed");
     }
@@ -65,17 +68,18 @@ public class DragAndDropTests extends BaseTest {
           description = "TC_4.3: Verify drag and drop reset functionality")
     @Description("Verify drag and drop can be reset after successful drop")
     public void testDragAndDropReset() {
-        LOG.info("Starting TC_4.3: Drag and Drop - Reset");
-
+        allureStep("Step 1: Navigate to Drag and Drop screen");
         dragAndDropFlow.navigateToDragAndDrop();
         assertTrue(dragAndDropFlow.isDragPageLoaded(), "Drag and Drop page should be loaded");
 
+        allureStep("Step 2: Perform initial drag and drop");
         dragAndDropFlow.dragElementToDropZone();
         assertTrue(dragAndDropFlow.isDropSuccessful(), "Initial drag and drop should be successful");
 
+        allureStep("Step 3: Reset drag and drop");
         dragAndDropFlow.resetDragDrop();
 
-        // Verify reset worked - elements should be back to initial state
+        allureStep("Step 4: Verify reset - draggable element is visible again");
         assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should be visible after reset");
     }
 }

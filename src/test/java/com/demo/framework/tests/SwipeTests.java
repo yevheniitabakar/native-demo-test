@@ -7,6 +7,7 @@ import io.qameta.allure.Story;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static com.demo.framework.utils.AllureStepUtils.allureStep;
 import static org.testng.Assert.*;
 
 /**
@@ -25,29 +26,23 @@ public class SwipeTests extends BaseTest {
         swipeFlow = new SwipeFlow();
     }
 
-    @Test(groups = {"swipe", "smoke", "regression"},
+    @Test(groups = {"swipe", "regression"},
           description = "TC_2.1: Verify swipe through carousel and scroll functionality")
     @Description("Navigate to Swipe tab, swipe to COMPATIBLE card, scroll down to find hidden image, scroll back to top")
     public void testSwipeThroughCarousel() {
-        LOG.info("Starting TC_2.1: Swipe Through Carousel");
-
-        // Step 1: Navigate to Swipe tab
-        LOG.info("Step 1: Navigate to Swipe tab");
+        allureStep("Step 1: Navigate to Swipe tab");
         swipeFlow.navigateToSwipe();
         assertTrue(swipeFlow.isSwipePageLoaded(), "Swipe page should be loaded");
 
-        // Step 2: Swipe multiple times to reach the 'COMPATIBLE' card
-        LOG.info("Step 2: Swipe to reach COMPATIBLE card");
+        allureStep("Step 2: Swipe multiple times to reach the 'COMPATIBLE' card");
         swipeFlow.swipeToCard("COMPATIBLE");
         assertTrue(swipeFlow.isCardDisplayed("COMPATIBLE"), "COMPATIBLE card should be displayed");
 
-        // Step 3: Scroll the screen down to find a hidden image with text 'You found me!!!'
-        LOG.info("Step 3: Scroll down to find hidden image");
+        allureStep("Step 3: Scroll the screen down to find a hidden image with text 'You found me!!!'");
         swipeFlow.scrollDownToFindHiddenElement();
         assertTrue(swipeFlow.isHiddenElementFound(), "Hidden element with 'You found me!!!' should be visible");
 
-        // Step 4: Scroll the screen to the top
-        LOG.info("Step 4: Scroll back to top");
+        allureStep("Step 4: Scroll the screen to the top");
         swipeFlow.scrollToTop();
         assertTrue(swipeFlow.isSwipePageLoaded(), "Should be back at the top of the page");
     }
