@@ -2,6 +2,7 @@ package com.demo.framework.pages.ios;
 
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.DragPage;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.PointerInput;
@@ -15,12 +16,12 @@ import java.util.Arrays;
  */
 public class IOSDragPage extends BasePage implements DragPage {
 
-    // iOS-specific locators
-    private static final By DRAG_SCREEN = By.xpath("//XCUIElementTypeStaticText[@name='Drag and Drop']");
-    private static final By DRAGGABLE_ELEMENT = By.xpath("//XCUIElementTypeOther[@name='drag-l1']");
-    private static final By DROP_ZONE = By.xpath("//XCUIElementTypeOther[@name='drop-l1']");
-    private static final By SUCCESS_MESSAGE = By.xpath("//XCUIElementTypeStaticText[@name='Congratulations']");
-    private static final By RESET_BUTTON = By.xpath("//XCUIElementTypeButton[@name='Reset']");
+    // iOS locators using Accessibility ID (name/label)
+    private static final By DRAG_SCREEN = AppiumBy.accessibilityId("Drag-screen");
+    private static final By DRAGGABLE_ELEMENT = AppiumBy.accessibilityId("drag-l1");
+    private static final By DROP_ZONE = AppiumBy.accessibilityId("drop-l1");
+    private static final By SUCCESS_MESSAGE = AppiumBy.accessibilityId("success-message");
+    private static final By RESET_BUTTON = AppiumBy.accessibilityId("button-Retry");
 
     @Override
     public String getPageTitle() {
@@ -62,7 +63,6 @@ public class IOSDragPage extends BasePage implements DragPage {
     @Override
     public void dragElement(int sourceIndex, int targetIndex) {
         LOG.info("Dragging element from {} to {} on iOS", sourceIndex, targetIndex);
-        // TODO: Implement multi-element drag based on actual app structure
         dragElementToDropZone();
     }
 
@@ -91,21 +91,50 @@ public class IOSDragPage extends BasePage implements DragPage {
     @Override
     public void resetDragDrop() {
         LOG.info("Resetting drag and drop on iOS");
-        if (actions.isDisplayed(RESET_BUTTON)) {
+        try {
+            wait.untilVisible(RESET_BUTTON);
             actions.click(RESET_BUTTON);
+        } catch (Exception e) {
+            LOG.warn("Reset button not found: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void dragAndReleaseElsewhere() {
+        LOG.info("Dragging element and releasing elsewhere on iOS");
+        try {
+            WebElement draggable = wait.untilVisible(DRAGGABLE_ELEMENT);
+
+            int startX = draggable.getLocation().getX() + draggable.getSize().getWidth() / 2;
+            int startY = draggable.getLocation().getY() + draggable.getSize().getHeight() / 2;
+            // Release at empty area (offset from original position)
+            int endX = startX + 50;
+            int endY = startY + 50;
+
+            performDragDrop(startX, startY, endX, endY);
+        } catch (Exception e) {
+            LOG.error("Error during drag and release elsewhere", e);
         }
     }
 
     @Override
     public boolean isDraggableElementVisible() {
         LOG.info("Checking if draggable element is visible on iOS");
-        return actions.isDisplayed(DRAGGABLE_ELEMENT);
+        try {
+            return actions.isDisplayed(DRAGGABLE_ELEMENT);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
     public boolean isDropZoneVisible() {
         LOG.info("Checking if drop zone is visible on iOS");
-        return actions.isDisplayed(DROP_ZONE);
+        try {
+            return actions.isDisplayed(DROP_ZONE);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -113,5 +142,18 @@ public class IOSDragPage extends BasePage implements DragPage {
         LOG.info("Getting success message on iOS");
         return actions.getText(SUCCESS_MESSAGE);
     }
-}
 
+    @Override
+    public String getElementState() {
+        LOG.info("Getting element state on iOS");
+        try {
+            WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
+            return String.format("x:%d,y:%d,visible:%s",
+                    draggable.getLocation().getX(),
+                    draggable.getLocation().getY(),
+                    draggable.isDisplayed());
+        } catch (Exception e) {
+            return isDropSuccessful() ? "dropped" : "initial";
+        }
+    }
+}

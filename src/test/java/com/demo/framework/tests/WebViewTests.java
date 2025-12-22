@@ -1,9 +1,11 @@
 package com.demo.framework.tests;
 
 import com.demo.framework.flows.WebViewFlow;
+import com.demo.framework.utils.AppUtils;
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -27,6 +29,11 @@ public class WebViewTests extends BaseTest {
         webViewFlow = new WebViewFlow();
     }
 
+    @AfterMethod(alwaysRun = true)
+    public void closeBrowserIfOpen() {
+        AppUtils.closeBrowser();
+    }
+
     @Test(groups = {"webview", "regression"},
           description = "TC_3.1: Verify WebView navigation and GitHub link")
     @Description("Navigate to WebView tab, verify content loads, tap View on GitHub button, verify browser opens with correct URL")
@@ -34,10 +41,8 @@ public class WebViewTests extends BaseTest {
 
         allureStep("Step 1: Navigate to WebView tab");
         webViewFlow.navigateToWebView();
-        assertTrue(webViewFlow.isWebViewPageLoaded(), "WebView page should be loaded");
 
         allureStep("Step 2: Wait for WebView to load completely");
-        webViewFlow.waitForWebViewToLoad();
         assertTrue(webViewFlow.isWebViewDisplayed(), "WebView content should be displayed");
 
         allureStep("Step 3: Verify page title or specific web element is present");

@@ -69,8 +69,12 @@ public class LoginFlow {
         return loginPage.isLoginSuccessful();
     }
 
-    public boolean isErrorMessageDisplayed() {
-        return loginPage.isErrorMessageDisplayed();
+    public boolean isEmailErrorMessageDisplayed() {
+        return loginPage.isInvalidEmailErrorMessageDisplayed();
+    }
+
+    public boolean isPasswordErrorMessageDisplayed() {
+        return loginPage.isInvalidPasswordErrorMessageDisplayed();
     }
 
     public String getErrorMessage() {

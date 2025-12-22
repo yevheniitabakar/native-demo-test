@@ -2,6 +2,7 @@ package com.demo.framework.pages.android;
 
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.LoginPage;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -9,13 +10,21 @@ import org.openqa.selenium.By;
  */
 public class AndroidLoginPage extends BasePage implements LoginPage {
 
-    // Android-specific locators
-    private static final By LOGIN_SCREEN = By.xpath("//android.widget.TextView[@text='Login / Sign up Form']");
-    private static final By EMAIL_INPUT = By.xpath("//android.widget.EditText[@content-desc='input-email']");
-    private static final By PASSWORD_INPUT = By.xpath("//android.widget.EditText[@content-desc='input-password']");
-    private static final By LOGIN_BUTTON = By.xpath("//android.widget.TextView[@text='LOGIN']");
-    private static final By ERROR_MESSAGE = By.xpath("//android.widget.TextView[contains(@text,'Invalid')]");
-    private static final By SUCCESS_MESSAGE = By.xpath("//android.widget.TextView[@text='You are logged in!']");
+    // Android locators using Accessibility ID (content-desc)
+    private static final By LOGIN_SCREEN = AppiumBy.accessibilityId("Login-screen");
+    private static final By EMAIL_INPUT = AppiumBy.accessibilityId("input-email");
+    private static final By PASSWORD_INPUT = AppiumBy.accessibilityId("input-password");
+    private static final By LOGIN_BUTTON = AppiumBy.accessibilityId("button-LOGIN");
+    // Fallback using UIAutomator for elements without accessibility id
+    private static final By INVALID_EMAIL_ERROR_MESSAGE = AppiumBy.androidUIAutomator(
+            "new UiSelector().text(\"Please enter a valid email address\")");
+    private static final By INVALID_PASSWORD_ERROR_MESSAGE = AppiumBy.androidUIAutomator(
+            "new UiSelector().text(\"Please enter at least 8 characters\")");
+    // Success popup elements
+    private static final By SUCCESS_TITLE = AppiumBy.id("android:id/alertTitle");
+    private static final By SUCCESS_MESSAGE = AppiumBy.id("android:id/message");
+    private static final String EXPECTED_SUCCESS_TITLE = "Success";
+    private static final String EXPECTED_SUCCESS_MESSAGE = "You are logged in!";
 
     @Override
     public String getPageTitle() {
@@ -64,24 +73,37 @@ public class AndroidLoginPage extends BasePage implements LoginPage {
     @Override
     public String getErrorMessage() {
         LOG.info("Getting error message on Android");
-        return actions.getText(ERROR_MESSAGE);
+        return actions.getText(INVALID_EMAIL_ERROR_MESSAGE);
     }
 
     @Override
-    public boolean isErrorMessageDisplayed() {
+    public boolean isInvalidEmailErrorMessageDisplayed() {
         LOG.info("Checking if error message is displayed on Android");
-        return actions.isDisplayed(ERROR_MESSAGE);
+        return actions.isDisplayed(INVALID_EMAIL_ERROR_MESSAGE);
+    }
+
+    @Override
+    public boolean isInvalidPasswordErrorMessageDisplayed() {
+        LOG.info("Checking if password error message is displayed on Android");
+        return actions.isDisplayed(INVALID_PASSWORD_ERROR_MESSAGE);
     }
 
     @Override
     public boolean isLoginSuccessful() {
         LOG.info("Checking if login was successful on Android");
+
         try {
-            wait.untilVisible(SUCCESS_MESSAGE);
-            return true;
+            String title = wait.untilVisible(SUCCESS_TITLE).getText();
+            LOG.info("Login popup title: {}", title);
+
+            String message = driver.findElement(SUCCESS_MESSAGE).getText();
+            LOG.info("Login popup message: {}", message);
+
+            return EXPECTED_SUCCESS_TITLE.equals(title) &&
+                    EXPECTED_SUCCESS_MESSAGE.equals(message);
         } catch (Exception e) {
+            LOG.warn("Login success check failed: {}", e.getMessage());
             return false;
         }
     }
 }
-

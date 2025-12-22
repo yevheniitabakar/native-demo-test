@@ -2,6 +2,7 @@ package com.demo.framework.pages.android;
 
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.HomePage;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -9,12 +10,12 @@ import org.openqa.selenium.By;
  */
 public class AndroidHomePage extends BasePage implements HomePage {
 
-    // Android-specific locators
-    private static final By HOME_SCREEN = By.xpath("//android.widget.TextView[@text='WEBDRIVER']");
-    private static final By LOGIN_BUTTON = By.xpath("//android.widget.TextView[@text='Login']");
-    private static final By SWIPE_BUTTON = By.xpath("//android.widget.TextView[@text='Swipe']");
-    private static final By WEBVIEW_BUTTON = By.xpath("//android.widget.TextView[@text='Webview']");
-    private static final By DRAG_BUTTON = By.xpath("//android.widget.TextView[@text='Drag']");
+    // Android locators using Accessibility ID (content-desc)
+    private static final By HOME_SCREEN = AppiumBy.accessibilityId("Home-screen");
+    private static final By LOGIN_BUTTON = AppiumBy.accessibilityId("Login");
+    private static final By SWIPE_BUTTON = AppiumBy.accessibilityId("Swipe");
+    private static final By WEBVIEW_BUTTON = AppiumBy.accessibilityId("Webview");
+    private static final By DRAG_BUTTON = AppiumBy.accessibilityId("Drag");
 
     @Override
     public String getPageTitle() {

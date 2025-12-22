@@ -12,6 +12,8 @@ public interface DragPage {
 
     void dragElement(int sourceIndex, int targetIndex);
 
+    void dragAndReleaseElsewhere();
+
     boolean isDropSuccessful();
 
     void resetDragDrop();
@@ -21,5 +23,7 @@ public interface DragPage {
     boolean isDropZoneVisible();
 
     String getSuccessMessage();
+
+    String getElementState();
 }
 

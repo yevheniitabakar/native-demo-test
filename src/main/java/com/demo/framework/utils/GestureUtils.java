@@ -1,6 +1,5 @@
 package com.demo.framework.utils;
 
-import com.demo.framework.drivers.DriverManager;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Utility class for gesture operations on mobile devices
@@ -55,10 +55,10 @@ public class GestureUtils {
      * Swipe up
      */
     public void swipeUp() {
-        LOG.info("Swiping up");
+        LOG.info("Swiping up ");
         Dimension size = driver.manage().window().getSize();
         int x = size.getWidth() / 2;
-        int startY = (int) (size.getHeight() * 0.8);
+        int startY = (int) (size.getHeight() * 0.9);
         int endY = (int) (size.getHeight() * 0.2);
 
         performSwipe(x, startY, x, endY);
@@ -78,6 +78,32 @@ public class GestureUtils {
     }
 
     /**
+     * Small scroll down (gentle - 20% of screen)
+     */
+    public void scrollDownSmall() {
+        LOG.info("Small scroll down");
+        Dimension size = driver.manage().window().getSize();
+        int x = size.getWidth() / 2;
+        int startY = (int) (size.getHeight() * 0.5);
+        int endY = (int) (size.getHeight() * 0.3);
+
+        performSwipe(x, startY, x, endY);
+    }
+
+    /**
+     * Small scroll up (gentle - 20% of screen)
+     */
+    public void scrollUpSmall() {
+        LOG.info("Small scroll up");
+        Dimension size = driver.manage().window().getSize();
+        int x = size.getWidth() / 2;
+        int startY = (int) (size.getHeight() * 0.3);
+        int endY = (int) (size.getHeight() * 0.5);
+
+        performSwipe(x, startY, x, endY);
+    }
+
+    /**
      * Perform swipe gesture using W3C Actions API
      */
     private void performSwipe(int startX, int startY, int endX, int endY) {
@@ -86,10 +112,10 @@ public class GestureUtils {
             Sequence sequence = new Sequence(finger, 0)
                     .addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
                     .addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
-                    .addAction(finger.createPointerMove(Duration.ofMillis(500), PointerInput.Origin.viewport(), endX, endY))
+                    .addAction(finger.createPointerMove(Duration.ofMillis(250), PointerInput.Origin.viewport(), endX, endY))
                     .addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
-            driver.perform(Arrays.asList(sequence));
+            driver.perform(Collections.singletonList(sequence));
         } catch (Exception e) {
             LOG.warn("Error performing swipe gesture", e);
         }

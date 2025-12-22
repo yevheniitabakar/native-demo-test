@@ -2,6 +2,7 @@ package com.demo.framework.pages.ios;
 
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.HomePage;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -9,12 +10,12 @@ import org.openqa.selenium.By;
  */
 public class IOSHomePage extends BasePage implements HomePage {
 
-    // iOS-specific locators
-    private static final By HOME_SCREEN = By.xpath("//XCUIElementTypeStaticText[@name='WEBDRIVER']");
-    private static final By LOGIN_BUTTON = By.xpath("//XCUIElementTypeButton[@name='Login']");
-    private static final By SWIPE_BUTTON = By.xpath("//XCUIElementTypeButton[@name='Swipe']");
-    private static final By WEBVIEW_BUTTON = By.xpath("//XCUIElementTypeButton[@name='Webview']");
-    private static final By DRAG_BUTTON = By.xpath("//XCUIElementTypeButton[@name='Drag']");
+    // iOS locators using Accessibility ID (name/label)
+    private static final By HOME_SCREEN = AppiumBy.accessibilityId("Home-screen");
+    private static final By LOGIN_BUTTON = AppiumBy.accessibilityId("Login");
+    private static final By SWIPE_BUTTON = AppiumBy.accessibilityId("Swipe");
+    private static final By WEBVIEW_BUTTON = AppiumBy.accessibilityId("Webview");
+    private static final By DRAG_BUTTON = AppiumBy.accessibilityId("Drag");
 
     @Override
     public String getPageTitle() {
@@ -58,4 +59,3 @@ public class IOSHomePage extends BasePage implements HomePage {
         actions.click(DRAG_BUTTON);
     }
 }
-

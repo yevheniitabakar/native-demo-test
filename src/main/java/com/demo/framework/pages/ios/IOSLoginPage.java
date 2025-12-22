@@ -2,6 +2,7 @@ package com.demo.framework.pages.ios;
 
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.LoginPage;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -9,13 +10,17 @@ import org.openqa.selenium.By;
  */
 public class IOSLoginPage extends BasePage implements LoginPage {
 
-    // iOS-specific locators
-    private static final By LOGIN_SCREEN = By.xpath("//XCUIElementTypeStaticText[@name='Login / Sign up Form']");
-    private static final By EMAIL_INPUT = By.xpath("//XCUIElementTypeTextField[@name='input-email']");
-    private static final By PASSWORD_INPUT = By.xpath("//XCUIElementTypeSecureTextField[@name='input-password']");
-    private static final By LOGIN_BUTTON = By.xpath("//XCUIElementTypeButton[@name='LOGIN']");
-    private static final By ERROR_MESSAGE = By.xpath("//XCUIElementTypeStaticText[contains(@name,'Invalid')]");
-    private static final By SUCCESS_MESSAGE = By.xpath("//XCUIElementTypeStaticText[@name='You are logged in!']");
+    // iOS locators using Accessibility ID (name/label)
+    private static final By LOGIN_SCREEN = AppiumBy.accessibilityId("Login-screen");
+    private static final By EMAIL_INPUT = AppiumBy.accessibilityId("input-email");
+    private static final By PASSWORD_INPUT = AppiumBy.accessibilityId("input-password");
+    private static final By LOGIN_BUTTON = AppiumBy.accessibilityId("button-LOGIN");
+    // Fallback using iOS Predicate String for elements without accessibility id
+    private static final By INVALID_EMAIL_ERROR_MESSAGE = AppiumBy.iOSNsPredicateString(
+            "name CONTAINS 'Invalid' OR label CONTAINS 'Invalid'");
+    private static final By INVALID_PASSWORD_ERROR_MESSAGE = AppiumBy.iOSNsPredicateString(
+            "name CONTAINS 'Invalid' OR label CONTAINS 'Invalid'");
+    private static final By SUCCESS_MESSAGE = AppiumBy.accessibilityId("success-message");
 
     @Override
     public String getPageTitle() {
@@ -64,13 +69,19 @@ public class IOSLoginPage extends BasePage implements LoginPage {
     @Override
     public String getErrorMessage() {
         LOG.info("Getting error message on iOS");
-        return actions.getText(ERROR_MESSAGE);
+        return actions.getText(INVALID_EMAIL_ERROR_MESSAGE);
     }
 
     @Override
-    public boolean isErrorMessageDisplayed() {
+    public boolean isInvalidEmailErrorMessageDisplayed() {
         LOG.info("Checking if error message is displayed on iOS");
-        return actions.isDisplayed(ERROR_MESSAGE);
+        return actions.isDisplayed(INVALID_EMAIL_ERROR_MESSAGE);
+    }
+
+    @Override
+    public boolean isInvalidPasswordErrorMessageDisplayed() {
+        LOG.info("Checking if password error message is displayed on iOS");
+        return actions.isDisplayed(INVALID_PASSWORD_ERROR_MESSAGE);
     }
 
     @Override
@@ -84,4 +95,3 @@ public class IOSLoginPage extends BasePage implements LoginPage {
         }
     }
 }
-

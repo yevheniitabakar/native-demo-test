@@ -3,6 +3,7 @@ package com.demo.framework.pages.android;
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.SwipePage;
 import com.demo.framework.utils.GestureUtils;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -10,10 +11,9 @@ import org.openqa.selenium.By;
  */
 public class AndroidSwipePage extends BasePage implements SwipePage {
 
-    // Android-specific locators
-    private static final By SWIPE_SCREEN = By.xpath("//android.widget.TextView[@text='Swipe horizontal']");
-    private static final By CARD_TITLE_TEMPLATE = By.xpath("//android.widget.TextView[contains(@text,'%s')]");
-    private static final By HIDDEN_ELEMENT = By.xpath("//android.widget.TextView[@text='You found me!!!']");
+    // Android locators using Accessibility ID (content-desc)
+    private static final By SWIPE_SCREEN = AppiumBy.accessibilityId("Swipe-screen");
+    private static final By HIDDEN_ELEMENT = AppiumBy.accessibilityId("WebdriverIO logo");
 
     private final GestureUtils gesture;
 
@@ -109,7 +109,8 @@ public class AndroidSwipePage extends BasePage implements SwipePage {
     public boolean isCardDisplayed(String cardName) {
         LOG.info("Checking if card '{}' is displayed on Android", cardName);
         try {
-            By cardLocator = By.xpath(String.format("//android.widget.TextView[contains(@text,'%s')]", cardName));
+            By cardLocator = AppiumBy.androidUIAutomator(
+                    String.format("new UiSelector().textContains(\"%s\")", cardName));
             return actions.isDisplayed(cardLocator);
         } catch (Exception e) {
             return false;

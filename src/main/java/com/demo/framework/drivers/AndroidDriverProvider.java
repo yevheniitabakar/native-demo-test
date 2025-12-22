@@ -24,6 +24,11 @@ public class AndroidDriverProvider implements DriverFactory {
                 .setFullReset(config.fullReset())
                 .setNoReset(config.noReset());
 
+        // ChromeDriver configuration for WebView testing
+        String chromedriverDir = System.getProperty("user.home") + "/.appium/chromedriver";
+        options.setCapability("appium:chromedriverAutodownload", true);
+        options.setCapability("appium:chromedriverExecutableDir", chromedriverDir);
+
         LOG.info("Starting Android driver with capabilities:");
         LOG.info("  Device: {}", config.deviceName());
         LOG.info("  Platform Version: {}", config.platformVersion());

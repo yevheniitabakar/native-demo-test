@@ -29,6 +29,23 @@ Production-ready mobile test automation framework using Appium, Java 17, TestNG,
 - Appium: `npm install -g appium`
 - Appium drivers: `appium driver install uiautomator2` / `appium driver install xcuitest`
 
+### WebView Testing (Android)
+
+ChromeDriver is required for WebView context switching. Setup:
+
+```bash
+# Install Chromium driver (optional, for auto-download support)
+appium driver install chromium
+
+# Or manually download ChromeDriver matching your WebView Chrome version:
+mkdir -p ~/.appium/chromedriver
+cd ~/.appium/chromedriver
+# Download from: https://chromedriver.chromium.org/downloads
+# Example for Chrome 113:
+curl -O https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_mac64.zip
+unzip chromedriver_mac64.zip && rm chromedriver_mac64.zip
+```
+
 ## Running Tests
 
 ### Using run_tests.sh (Recommended)

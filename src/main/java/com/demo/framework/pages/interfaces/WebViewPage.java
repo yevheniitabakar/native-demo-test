@@ -6,6 +6,8 @@ package com.demo.framework.pages.interfaces;
  */
 public interface WebViewPage {
 
+    void tapCloseButton();
+
     boolean isPageLoaded();
 
     void waitForWebViewToLoad();

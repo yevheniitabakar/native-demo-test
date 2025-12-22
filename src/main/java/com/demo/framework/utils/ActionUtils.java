@@ -1,8 +1,8 @@
 package com.demo.framework.utils;
 
-import com.demo.framework.drivers.DriverManager;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.slf4j.Logger;
@@ -115,6 +115,21 @@ public class ActionUtils {
         LOG.debug("Right clicking on element: {}", locator);
         WebElement element = wait.untilClickable(locator);
         new Actions(driver).contextClick(element).perform();
+    }
+
+    /**
+     * Scroll to element until visible and click
+     */
+    public void scrollToAndClick(By locator) {
+        LOG.debug("Scrolling to element and clicking: {}", locator);
+        WebElement element = wait.untilPresent(locator);
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+        element.click();
+//        new Actions(driver)
+//            .scrollToElement(element)
+//            .click(element)
+//            .perform();
     }
 }
 

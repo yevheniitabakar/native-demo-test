@@ -3,6 +3,7 @@ package com.demo.framework.pages.ios;
 import com.demo.framework.pages.BasePage;
 import com.demo.framework.pages.interfaces.SwipePage;
 import com.demo.framework.utils.GestureUtils;
+import io.appium.java_client.AppiumBy;
 import org.openqa.selenium.By;
 
 /**
@@ -10,9 +11,9 @@ import org.openqa.selenium.By;
  */
 public class IOSSwipePage extends BasePage implements SwipePage {
 
-    // iOS-specific locators
-    private static final By SWIPE_SCREEN = By.xpath("//XCUIElementTypeStaticText[@name='Swipe horizontal']");
-    private static final By HIDDEN_ELEMENT = By.xpath("//XCUIElementTypeStaticText[@name='You found me!!!']");
+    // iOS locators using Accessibility ID (name/label)
+    private static final By SWIPE_SCREEN = AppiumBy.accessibilityId("Swipe-screen");
+    private static final By HIDDEN_ELEMENT = AppiumBy.accessibilityId("WebdriverIO logo");
 
     private final GestureUtils gesture;
 
@@ -108,7 +109,8 @@ public class IOSSwipePage extends BasePage implements SwipePage {
     public boolean isCardDisplayed(String cardName) {
         LOG.info("Checking if card '{}' is displayed on iOS", cardName);
         try {
-            By cardLocator = By.xpath(String.format("//XCUIElementTypeStaticText[contains(@name,'%s')]", cardName));
+            By cardLocator = AppiumBy.iOSNsPredicateString(
+                    String.format("name CONTAINS '%s' OR label CONTAINS '%s'", cardName, cardName));
             return actions.isDisplayed(cardLocator);
         } catch (Exception e) {
             return false;
@@ -128,8 +130,6 @@ public class IOSSwipePage extends BasePage implements SwipePage {
     @Override
     public String getCurrentCardText() {
         LOG.info("Getting current card text on iOS");
-        // TODO: Implement based on actual app structure
         return "";
     }
 }
-

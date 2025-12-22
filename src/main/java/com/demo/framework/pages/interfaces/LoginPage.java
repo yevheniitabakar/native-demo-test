@@ -18,7 +18,9 @@ public interface LoginPage {
 
     String getErrorMessage();
 
-    boolean isErrorMessageDisplayed();
+    boolean isInvalidEmailErrorMessageDisplayed();
+
+    boolean isInvalidPasswordErrorMessageDisplayed();
 
     boolean isLoginSuccessful();
 }

@@ -52,6 +52,13 @@ public class DragAndDropFlow {
         return this;
     }
 
+    @Step("Drag element and release elsewhere (not on target)")
+    public DragAndDropFlow dragAndReleaseElsewhere() {
+        LOG.info("Dragging element and releasing elsewhere");
+        dragPage.dragAndReleaseElsewhere();
+        return this;
+    }
+
     public boolean isDragPageLoaded() {
         return dragPage.isPageLoaded();
     }
@@ -70,6 +77,10 @@ public class DragAndDropFlow {
 
     public String getSuccessMessage() {
         return dragPage.getSuccessMessage();
+    }
+
+    public String getElementState() {
+        return dragPage.getElementState();
     }
 }
 

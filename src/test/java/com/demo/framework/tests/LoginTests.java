@@ -40,7 +40,7 @@ public class LoginTests extends BaseTest {
 
         allureStep("Step 3: Tap Login button and verify successful login");
         loginFlow.clickLoginButton();
-        assertTrue(loginFlow.isLoginSuccessful(), "User should reach home/success screen after login");
+        assertTrue(loginFlow.isLoginSuccessful(), "User should reach success popup after login");
     }
 
     @Test(groups = {"login", "regression"},
@@ -57,7 +57,7 @@ public class LoginTests extends BaseTest {
         loginFlow.clickLoginButton();
 
         allureStep("Step 3: Verify error message is displayed");
-        assertTrue(loginFlow.isErrorMessageDisplayed(), "Error message should be displayed for invalid email format");
+        assertTrue(loginFlow.isEmailErrorMessageDisplayed(), "Error message should be displayed for invalid email format");
     }
 
     @Test(groups = {"login", "regression"},
@@ -78,7 +78,8 @@ public class LoginTests extends BaseTest {
         loginFlow.clickLoginButton();
 
         allureStep("Step 5: Verify validation messages for both fields");
-        assertTrue(loginFlow.isErrorMessageDisplayed(), "Validation messages should be displayed for empty fields");
+        assertTrue(loginFlow.isEmailErrorMessageDisplayed() && loginFlow.isPasswordErrorMessageDisplayed(),
+                "Validation messages should be displayed for empty fields");
     }
 }
 
