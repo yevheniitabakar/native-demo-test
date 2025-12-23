@@ -48,20 +48,61 @@ unzip chromedriver_mac64.zip && rm chromedriver_mac64.zip
 
 ## Running Tests
 
-### Using run_tests.sh (Recommended)
-Auto-manages device lifecycle (boots emulator/simulator if needed).
+### Entry Point: `run_tests.sh` (Recommended)
+``
+The recommended way to run tests. This script automatically manages the complete test lifecycle:
+
+1. **Device Management** - Boots emulator/simulator if not running, creates one if none exists
+2. **Appium Server** - Starts Appium if not running
+3. **App Installation** - Installs the test app on the device
+4. **Test Execution** - Runs tests via Gradle
 
 ```bash
-./run_tests.sh android    # Android tests
-./run_tests.sh ios        # iOS tests
+`./run_tests.sh android`    # Run all Android tests
+`./run_tests.sh ios `       # Run all iOS tests
 ```
 
-### Using Gradle (Device must be booted)
+**Device defaults** (configured in `scripts/device-manager.sh`):
+- Android: Pixel 7, API 34 (Android 14)
+- iOS: iPhone 16, iOS 26.1
+
+### Direct Gradle Execution
+
+Use this when you want more control or the device is already booted and Appium is running.
+
+**Prerequisites:**
+- Device/emulator must be booted
+- Appium server must be running (`appium`)
 
 ```bash
-./gradlew test -Dplatform=android                               # All tests (default)
-./gradlew test -Dplatform=ios                                   # All iOS tests
-./gradlew test -Dplatform=android -DsuiteXmlFile=smoke.xml      # Smoke suite only
+# Run all tests
+./gradlew test -Dplatform=android
+./gradlew test -Dplatform=ios
+
+# Run specific test suite
+./gradlew test -Dplatform=android -DsuiteXmlFile=smoke.xml
+
+# Run specific test groups
+./gradlew test -Dplatform=ios -Dgroups=login,smoke
+```
+
+### Device Management Script
+
+Standalone device management without running tests:
+
+```bash
+# Check device status
+./scripts/device-manager.sh android check
+./scripts/device-manager.sh ios check
+
+# Start device (creates if not exists)
+./scripts/device-manager.sh android start
+./scripts/device-manager.sh ios start
+
+# List available devices
+./scripts/device-manager.sh android list
+./scripts/device-manager.sh ios list
+./scripts/device-manager.sh ios runtimes    # List iOS runtimes
 ```
 
 ## Test Suites
@@ -75,7 +116,6 @@ Auto-manages device lifecycle (boots emulator/simulator if needed).
 
 | Test Class | Groups | Test Cases |
 |------------|--------|------------|
-| `SampleTest` | smoke | Framework bootstrap sanity |
 | `LoginTests` | login, smoke, regression | TC_1.1-1.3: Login flows |
 | `SwipeTests` | swipe, smoke, regression | TC_2.1-2.3: Carousel swipe |
 | `WebViewTests` | webview, smoke, regression | TC_3.1-3.3: WebView navigation |
