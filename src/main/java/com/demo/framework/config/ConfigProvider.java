@@ -39,6 +39,15 @@ public class ConfigProvider {
     public AppiumConfig getAppiumConfig() {
         String platformName = getPlatformName();
         String appPath = getAppPathForPlatform(platformName);
+        boolean isIOS = "IOS".equalsIgnoreCase(platformName);
+        
+        // For iOS, default to noReset=true and fullReset=false to keep simulator alive
+        boolean fullReset = isIOS 
+                ? getBoolean("appium:fullReset", false) 
+                : getBoolean("appium:fullReset", true);
+        boolean noReset = isIOS 
+                ? getBoolean("appium:noReset", true) 
+                : getBoolean("appium:noReset", false);
 
         return new AppiumConfig(
                 platformName,
@@ -48,9 +57,79 @@ public class ConfigProvider {
                 appPath,
                 URI.create(getRequired("appiumServerUrl")),
                 Duration.ofSeconds(Long.parseLong(properties.getProperty("newCommandTimeout", "120"))),
-                getBoolean("appium:fullReset", true),
-                getBoolean("appium:noReset", false)
+                fullReset,
+                noReset,
+                getDeviceUdid(platformName),
+                getBoolean("appium:usePrebuiltWDA", true),
+                getBoolean("appium:skipDeviceInitialization", true)
         );
+    }
+    
+    /**
+     * Get device UDID based on platform
+     * For iOS, automatically detects booted simulator UDID if not specified
+     */
+    private String getDeviceUdid(String platformName) {
+        if (platformName == null) {
+            return null;
+        }
+        
+        String configuredUdid = switch (platformName.toUpperCase()) {
+            case "ANDROID" -> properties.getProperty("device.android.udid", null);
+            case "IOS" -> properties.getProperty("device.ios.udid", null);
+            default -> null;
+        };
+        
+        // If UDID is configured, use it
+        if (configuredUdid != null && !configuredUdid.isBlank()) {
+            return configuredUdid.trim();
+        }
+        
+        // For iOS, try to detect booted simulator UDID automatically
+        if ("IOS".equalsIgnoreCase(platformName)) {
+            return detectBootedIOSSimulatorUdid();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Detect the UDID of a booted iOS simulator
+     */
+    private String detectBootedIOSSimulatorUdid() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("xcrun", "simctl", "list", "devices");
+            Process process = pb.start();
+            
+            StringBuilder output = new StringBuilder();
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
+            
+            process.waitFor();
+            String[] lines = output.toString().split("\n");
+            
+            for (String line : lines) {
+                if (line.contains("(Booted)")) {
+                    // Extract UDID from line like: "iPhone 15 (UDID) (Booted)"
+                    // Find the UUID pattern
+                    java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                            "\\(([A-F0-9-]{36})\\)");
+                    java.util.regex.Matcher matcher = pattern.matcher(line);
+                    if (matcher.find()) {
+                        return matcher.group(1);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Log but don't fail - UDID detection is optional
+            System.err.println("Warning: Could not detect booted iOS simulator UDID: " + e.getMessage());
+        }
+        return null;
     }
 
     /**

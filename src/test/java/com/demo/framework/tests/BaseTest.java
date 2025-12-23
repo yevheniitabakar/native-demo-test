@@ -7,6 +7,7 @@ import io.appium.java_client.AppiumDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
@@ -55,6 +56,71 @@ public abstract class BaseTest {
         LOG.info("Tearing down driver");
         DriverManager.quitDriver();
         LOG.info("Driver teardown completed");
+    }
+
+    /**
+     * Cleanup after entire test suite completes
+     * Uninstalls the app from device/simulator
+     */
+    @AfterSuite(alwaysRun = true)
+    public void cleanupAfterSuite() {
+        LOG.info("Suite completed - cleaning up app from device");
+        
+        if (appiumConfig == null) {
+            LOG.warn("Configuration not available for cleanup");
+            return;
+        }
+        
+        String platform = appiumConfig.platformName();
+        String bundleId = getBundleIdForPlatform(platform);
+        
+        if (bundleId != null) {
+            uninstallApp(platform, bundleId, appiumConfig.udid());
+        }
+    }
+
+    /**
+     * Get bundle ID / package name based on platform
+     */
+    private String getBundleIdForPlatform(String platform) {
+        if ("IOS".equalsIgnoreCase(platform)) {
+            // iOS bundle ID from app path or hardcoded
+            return "org.reactjs.native.example.wdiodemoapp";
+        } else if ("ANDROID".equalsIgnoreCase(platform)) {
+            // Android package name
+            return "com.wdiodemoapp";
+        }
+        return null;
+    }
+
+    /**
+     * Uninstall app from device/simulator
+     */
+    private void uninstallApp(String platform, String bundleId, String udid) {
+        try {
+            ProcessBuilder pb;
+            if ("IOS".equalsIgnoreCase(platform)) {
+                if (udid != null && !udid.isBlank()) {
+                    pb = new ProcessBuilder("xcrun", "simctl", "uninstall", udid, bundleId);
+                } else {
+                    pb = new ProcessBuilder("xcrun", "simctl", "uninstall", "booted", bundleId);
+                }
+            } else {
+                pb = new ProcessBuilder("adb", "uninstall", bundleId);
+            }
+            
+            LOG.info("Uninstalling app: {} from {}", bundleId, platform);
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+            
+            if (exitCode == 0) {
+                LOG.info("App uninstalled successfully");
+            } else {
+                LOG.warn("App uninstall returned exit code: {}", exitCode);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to uninstall app: {}", e.getMessage());
+        }
     }
 
     /**

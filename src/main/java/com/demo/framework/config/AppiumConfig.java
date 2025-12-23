@@ -5,7 +5,8 @@ import java.time.Duration;
 
 public record AppiumConfig(String platformName, String platformVersion, String deviceName, String automationName,
                            String appPath, URI serverUrl, Duration newCommandTimeout,
-                           boolean fullReset, boolean noReset) {
+                           boolean fullReset, boolean noReset, String udid,
+                           boolean usePrebuiltWDA, boolean skipDeviceInitialization) {
 
     @Override
     public String toString() {
@@ -19,6 +20,9 @@ public record AppiumConfig(String platformName, String platformVersion, String d
                 ", newCommandTimeout=" + newCommandTimeout +
                 ", fullReset=" + fullReset +
                 ", noReset=" + noReset +
+                ", udid='" + udid + '\'' +
+                ", usePrebuiltWDA=" + usePrebuiltWDA +
+                ", skipDeviceInitialization=" + skipDeviceInitialization +
                 '}';
     }
 
