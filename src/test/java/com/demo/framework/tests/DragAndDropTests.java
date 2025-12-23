@@ -39,14 +39,14 @@ public class DragAndDropTests extends BaseTest {
         assertTrue(dragAndDropFlow.isDropZoneVisible(), "Drop zone should be visible");
 
         allureStep("Step 3: Drag element to drop zone");
-        dragAndDropFlow.dragElementToDropZone();
+        dragAndDropFlow.dragAllElementsToDropZones();
 
         allureStep("Step 4: Verify drag and drop was successful");
-        assertTrue(dragAndDropFlow.isDropSuccessful(), "Drag and drop should be successful");
+        assertTrue(dragAndDropFlow.isCaptchaCompleted(), "Drag and drop should be successful");
     }
 
     @Test(groups = {"drag", "regression"},
-          description = "TC_4.3: Verify drag and drop element state verification")
+          description = "TC_4.2: Verify drag and drop element state verification")
     @Description("Verify element states during drag operations: initial state, cancelled drag, successful drag, and reset")
     public void testDragAndDropElementStateVerification() {
         allureStep("Step 1: Navigate to Drag tab");
@@ -57,16 +57,18 @@ public class DragAndDropTests extends BaseTest {
         assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should be visible");
         String initialState = dragAndDropFlow.getElementState();
 
+
         allureStep("Step 3: Perform drag action but release elsewhere (don't drop in target)");
         dragAndDropFlow.dragAndReleaseElsewhere();
+        String intermediateState = dragAndDropFlow.getElementState();
 
         allureStep("Step 4: Verify element returns to original position");
-        assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should still be visible");
-        assertFalse(dragAndDropFlow.isDropSuccessful(), "Drop should not be successful when released elsewhere");
+        assertEquals(initialState, intermediateState, "Element should return to initial state after cancelled drag");
+        assertFalse(dragAndDropFlow.isElementDroppedSuccessfully(), "Drop should not be successful when released elsewhere");
 
         allureStep("Step 5: Perform successful drag and drop");
         dragAndDropFlow.dragElementToDropZone();
-        assertTrue(dragAndDropFlow.isDropSuccessful(), "Drag and drop should be successful");
+        assertTrue(dragAndDropFlow.isElementDroppedSuccessfully(), "Drag and drop should be successful");
 
         allureStep("Step 6: Verify final state differs from initial state");
         String finalState = dragAndDropFlow.getElementState();
@@ -76,8 +78,7 @@ public class DragAndDropTests extends BaseTest {
         dragAndDropFlow.resetDragDrop();
 
         allureStep("Step 8: Verify initial state is reset");
-        assertTrue(dragAndDropFlow.isDraggableElementVisible(), "Draggable element should be visible after reset");
-        assertFalse(dragAndDropFlow.isDropSuccessful(), "Success state should be reset");
+        assertEquals(initialState, dragAndDropFlow.getElementState(), "Element state should be reset to initial state after retry");
     }
 }
 

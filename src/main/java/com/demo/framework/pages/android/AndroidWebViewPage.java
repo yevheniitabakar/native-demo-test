@@ -43,8 +43,10 @@ public class AndroidWebViewPage extends BasePage implements WebViewPage {
     public boolean isWebViewDisplayed() {
         log.info("Checking if WebView is displayed on Android");
         try {
+            wait.untilVisible(WEB_CONTENT);
             return driver.findElement(WEB_CONTENT).isDisplayed();
         } catch (Exception e) {
+            log.warn("WebView not displayed: {}", e.getMessage());
             return false;
         }
     }
@@ -53,15 +55,25 @@ public class AndroidWebViewPage extends BasePage implements WebViewPage {
     public boolean isWebViewContentPresent() {
         log.info("Checking if WebView content is present on Android");
         try {
-            return driver.findElement(WEB_TITLE).isDisplayed() ||
-                   driver.findElement(WEB_LOGO).isDisplayed();
-        } catch (Exception e) {
+            // Try to find title or logo with explicit wait
             try {
-                String bodyText = driver.findElement(WEB_CONTENT).getText();
-                return bodyText != null && !bodyText.isEmpty();
-            } catch (Exception ex) {
-                return false;
+                wait.untilVisible(WEB_TITLE);
+                return true;
+            } catch (Exception titleEx) {
+                // Try logo as fallback
+                try {
+                    wait.untilVisible(WEB_LOGO);
+                    return true;
+                } catch (Exception logoEx) {
+                    // Final fallback - check body has content
+                    wait.untilVisible(WEB_CONTENT);
+                    String bodyText = driver.findElement(WEB_CONTENT).getText();
+                    return bodyText != null && !bodyText.isEmpty();
+                }
             }
+        } catch (Exception e) {
+            log.warn("WebView content not present: {}", e.getMessage());
+            return false;
         }
     }
 

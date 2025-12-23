@@ -22,39 +22,45 @@ public class DragAndDropFlow {
     }
 
     @Step("Navigate to Drag and Drop screen")
-    public DragAndDropFlow navigateToDragAndDrop() {
+    public void navigateToDragAndDrop() {
         log.info("Navigating to Drag and Drop screen");
         homePage.clickDragDropLink();
-        return this;
     }
 
     @Step("Drag element to drop zone")
-    public DragAndDropFlow dragElementToDropZone() {
+    public void dragElementToDropZone() {
         log.info("Dragging element to drop zone");
         dragPage.dragElementToDropZone();
-        return this;
+    }
+
+    @Step("Drag all elements to drop zones")
+    public void dragAllElementsToDropZones() {
+        log.info("Dragging all elements to drop zones");
+        dragPage.dragElementsToDropZone();
     }
 
     @Step("Reset drag and drop")
-    public DragAndDropFlow resetDragDrop() {
+    public void resetDragDrop() {
         log.info("Resetting drag and drop");
         dragPage.resetDragDrop();
-        return this;
     }
 
     @Step("Drag element and release elsewhere (not on target)")
-    public DragAndDropFlow dragAndReleaseElsewhere() {
+    public void dragAndReleaseElsewhere() {
         log.info("Dragging element and releasing elsewhere");
         dragPage.dragAndReleaseElsewhere();
-        return this;
     }
 
     public boolean isDragPageLoaded() {
         return dragPage.isPageLoaded();
     }
 
-    public boolean isDropSuccessful() {
-        return dragPage.isDropSuccessful();
+    public boolean isElementDroppedSuccessfully() {
+        return dragPage.isElementDroppedSuccessfully();
+    }
+
+    public boolean isCaptchaCompleted() {
+        return dragPage.isCaptchaCompleted();
     }
 
     public boolean isDraggableElementVisible() {

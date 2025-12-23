@@ -11,6 +11,8 @@ import org.openqa.selenium.interactions.Sequence;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * iOS implementation of Drag and Drop Page
@@ -18,16 +20,29 @@ import java.util.Collections;
 @Slf4j
 public class IOSDragPage extends BasePage implements DragPage {
 
-    private static final By DRAGGABLE_ELEMENT = AppiumBy.accessibilityId("drag-l1");
-    private static final By DROP_ZONE = AppiumBy.accessibilityId("drop-l1");
-    private static final By SUCCESS_MESSAGE = AppiumBy.accessibilityId("success-message");
-    private static final By RESET_BUTTON = AppiumBy.accessibilityId("button-Retry");
+    private static final String CLASS_CHAIN = "**/XCUIElementTypeOther[`name == \"%s\"`]/XCUIElementTypeOther";
+    private static final Map<String, String> DRAG_DROP_PAIRS = new LinkedHashMap<>() {{
+        put("drag-l1", "drop-l1");
+        put("drag-l2", "drop-l2");
+        put("drag-l3", "drop-l3");
+        put("drag-c1", "drop-c1");
+        put("drag-c2", "drop-c2");
+        put("drag-c3", "drop-c3");
+        put("drag-r1", "drop-r1");
+        put("drag-r2", "drop-r2");
+        put("drag-r3", "drop-r3");
+    }};
+    private static final By DRAGGABLE_ELEMENT = AppiumBy.iOSClassChain(String.format(CLASS_CHAIN, "drag-l1"));
+    private static final By DROP_ZONE = AppiumBy.iOSClassChain(String.format(CLASS_CHAIN, "drop-l1"));
+    private static final By SUCCESS_MESSAGE = AppiumBy.iOSClassChain("**/XCUIElementTypeStaticText"
+            + "[`name == \"You made it, click retry if you want to try it again.\"`]");
+    private static final By RESET_BUTTON = AppiumBy.accessibilityId("renew");
 
     @Override
     public boolean isPageLoaded() {
         log.info("Checking if iOS Drag Page is loaded");
         try {
-            wait.untilVisible(DRAGGABLE_ELEMENT);
+            wait.untilVisible(RESET_BUTTON);
             return true;
         } catch (Exception e) {
             log.warn("iOS Drag Page not loaded: {}", e.getMessage());
@@ -37,9 +52,22 @@ public class IOSDragPage extends BasePage implements DragPage {
 
     @Override
     public void dragElementToDropZone() {
-        log.info("Dragging element to drop zone on iOS");
-        WebElement draggable = wait.untilVisible(DRAGGABLE_ELEMENT);
-        WebElement dropZone = wait.untilVisible(DROP_ZONE);
+        log.info("Dragging single element to drop zone on iOS");
+        Map.Entry<String, String> pair = DRAG_DROP_PAIRS.entrySet().iterator().next();
+        performDragDropForPairs(pair);
+    }
+
+    @Override
+    public void dragElementsToDropZone() {
+        log.info("Dragging all elements to drop zones on iOS");
+        for (Map.Entry<String, String> pair : DRAG_DROP_PAIRS.entrySet()) {
+            performDragDropForPairs(pair);
+        }
+    }
+
+    private void performDragDropForPairs(Map.Entry<String, String> pair) {
+        WebElement draggable = wait.untilVisible(AppiumBy.iOSClassChain(String.format(CLASS_CHAIN, pair.getKey())));
+        WebElement dropZone = wait.untilVisible(AppiumBy.iOSClassChain(String.format(CLASS_CHAIN, pair.getValue())));
         performDragDrop(
                 draggable.getLocation().getX() + draggable.getSize().getWidth() / 2,
                 draggable.getLocation().getY() + draggable.getSize().getHeight() / 2,
@@ -58,7 +86,47 @@ public class IOSDragPage extends BasePage implements DragPage {
     }
 
     @Override
-    public boolean isDropSuccessful() {
+    public boolean isElementDroppedSuccessfully() {
+        log.info("Checking if single element was dropped successfully");
+        
+        try {
+            // Give a moment for UI to update after drop
+            Thread.sleep(300);
+            
+            // After successful drop, the draggable element should no longer be at the drag position
+            // It either disappears or moves to the drop zone position
+            WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
+            WebElement dropZone = driver.findElement(DROP_ZONE);
+            
+            // Get current positions
+            int draggableX = draggable.getLocation().getX();
+            int draggableY = draggable.getLocation().getY();
+            int dropZoneX = dropZone.getLocation().getX();
+            int dropZoneY = dropZone.getLocation().getY();
+            
+            // If draggable is now at/near drop zone position, drop was successful
+            // Use a tolerance of ~50px to account for slight positioning differences
+            int tolerance = 50;
+            boolean positionsMatch = Math.abs(draggableX - dropZoneX) < tolerance 
+                    && Math.abs(draggableY - dropZoneY) < tolerance;
+            
+            log.info("Draggable pos: ({}, {}), DropZone pos: ({}, {}), Match: {}", 
+                    draggableX, draggableY, dropZoneX, dropZoneY, positionsMatch);
+            
+            return positionsMatch;
+            
+        } catch (org.openqa.selenium.NoSuchElementException e) {
+            // If draggable element is no longer found, it was successfully dropped
+            log.info("Draggable element no longer found - drop successful");
+            return true;
+        } catch (Exception e) {
+            log.warn("Error checking drop status: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isCaptchaCompleted() {
         try {
             return actions.isDisplayed(SUCCESS_MESSAGE);
         } catch (Exception e) {
@@ -99,12 +167,14 @@ public class IOSDragPage extends BasePage implements DragPage {
     public String getElementState() {
         try {
             WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
-            return String.format("x:%d,y:%d,visible:%s",
+            String result = String.format("x:%d,y:%d,visible:%s",
                     draggable.getLocation().getX(),
                     draggable.getLocation().getY(),
                     draggable.isDisplayed());
+            log.info("Element state is: {}", result);
+            return result;
         } catch (Exception e) {
-            return isDropSuccessful() ? "dropped" : "initial";
+            return isCaptchaCompleted() ? "dropped" : "initial";
         }
     }
 

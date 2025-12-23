@@ -9,9 +9,13 @@ public interface DragPage {
 
     void dragElementToDropZone();
 
+    void dragElementsToDropZone();
+
     void dragAndReleaseElsewhere();
 
-    boolean isDropSuccessful();
+    boolean isElementDroppedSuccessfully();
+
+    boolean isCaptchaCompleted();
 
     void resetDragDrop();
 

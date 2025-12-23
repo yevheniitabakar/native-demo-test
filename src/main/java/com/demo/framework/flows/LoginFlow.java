@@ -22,31 +22,27 @@ public class LoginFlow {
     }
 
     @Step("Navigate to Login screen")
-    public LoginFlow navigateToLogin() {
+    public void navigateToLogin() {
         log.info("Navigating to Login screen");
         homePage.clickLoginLink();
-        return this;
     }
 
     @Step("Enter username: {username}")
-    public LoginFlow enterUsername(String username) {
+    public void enterUsername(String username) {
         log.info("Entering username: {}", username);
         loginPage.enterUsername(username);
-        return this;
     }
 
     @Step("Enter password")
-    public LoginFlow enterPassword(String password) {
+    public void enterPassword(String password) {
         log.info("Entering password");
         loginPage.enterPassword(password);
-        return this;
     }
 
     @Step("Click login button")
-    public LoginFlow clickLoginButton() {
+    public void clickLoginButton() {
         log.info("Clicking login button");
         loginPage.clickLoginButton();
-        return this;
     }
 
     public boolean isLoginPageLoaded() {

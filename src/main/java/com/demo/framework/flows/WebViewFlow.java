@@ -25,22 +25,19 @@ public class WebViewFlow {
     }
 
     @Step("Navigate to WebView screen and switch to WebView context")
-    public WebViewFlow navigateToWebView() {
+    public void navigateToWebView() {
         log.info("Navigating to WebView screen");
         homePage.clickWebViewLink();
         contextManager.waitForWebView();
         contextManager.switchToWebView();
-        return this;
     }
 
     @Step("Tap on 'View on GitHub' button")
-    public WebViewFlow tapViewOnGitHubButton() {
+    public void tapViewOnGitHubButton() {
         log.info("Tapping on 'View on GitHub' button");
         contextManager.switchToNative();
         webViewPage.tapViewOnGitHubButton();
-        return this;
     }
-
 
     public boolean isWebViewDisplayed() {
         return webViewPage.isWebViewDisplayed();

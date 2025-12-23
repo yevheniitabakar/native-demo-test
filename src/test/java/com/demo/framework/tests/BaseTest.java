@@ -11,6 +11,9 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Base test class for all test classes
  * Implements setup/teardown for driver and configuration
@@ -50,12 +53,42 @@ public abstract class BaseTest {
 
     /**
      * Quit driver after each test
+     * Also terminates the app to ensure clean state for next test
      */
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
         LOG.info("Tearing down driver");
+        
+        // Terminate app before quitting driver to ensure clean state for next test
+        terminateApp();
+        
         DriverManager.quitDriver();
         LOG.info("Driver teardown completed");
+    }
+
+    /**
+     * Terminate the app to reset its state
+     * This is faster than fullReset but ensures clean app state between tests
+     */
+    private void terminateApp() {
+        if (appiumConfig == null) {
+            return;
+        }
+        
+        try {
+            AppiumDriver driver = DriverManager.getDriver();
+            String bundleId = getBundleIdForPlatform(appiumConfig.platformName());
+            
+            if (bundleId != null && driver != null) {
+                LOG.info("Terminating app: {}", bundleId);
+                Map<String, Object> params = new HashMap<>();
+                params.put("bundleId", bundleId);
+                driver.executeScript("mobile: terminateApp", params);
+                LOG.info("App terminated successfully");
+            }
+        } catch (Exception e) {
+            LOG.warn("Could not terminate app (may already be closed): {}", e.getMessage());
+        }
     }
 
     /**

@@ -22,31 +22,27 @@ public class SwipeFlow {
     }
 
     @Step("Navigate to Swipe screen")
-    public SwipeFlow navigateToSwipe() {
+    public void navigateToSwipe() {
         log.info("Navigating to Swipe screen");
         homePage.clickSwipeLink();
-        return this;
     }
 
     @Step("Swipe to card: {cardName}")
-    public SwipeFlow swipeToCard(String cardName) {
+    public void swipeToCard(String cardName) {
         log.info("Swiping to card: {}", cardName);
         swipePage.swipeToCard(cardName);
-        return this;
     }
 
     @Step("Scroll down to find hidden element")
-    public SwipeFlow scrollDownToFindHiddenElement() {
+    public void scrollDownToFindHiddenElement() {
         log.info("Scrolling down to find hidden element");
         swipePage.scrollDownToFindHiddenElement();
-        return this;
     }
 
     @Step("Scroll to top of the page")
-    public SwipeFlow scrollToTop() {
+    public void scrollToTop() {
         log.info("Scrolling to top of the page");
         swipePage.scrollToTop();
-        return this;
     }
 
     public boolean isSwipePageLoaded() {

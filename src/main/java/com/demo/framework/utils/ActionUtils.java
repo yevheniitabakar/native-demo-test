@@ -42,6 +42,37 @@ public class ActionUtils {
     }
 
     /**
+     * Send text to iOS secure text field (password field)
+     * Uses slower character-by-character input to prevent text loss on iOS
+     */
+    public void sendTextToSecureField(By locator, String text) {
+        LOG.debug("Sending text to secure field: {}", locator);
+        WebElement element = wait.untilVisible(locator);
+        element.click();
+        clearText(locator);
+        sleep(200);
+        
+        // Send text character by character with small delays to prevent iOS input loss
+        for (char c : text.toCharArray()) {
+            element.sendKeys(String.valueOf(c));
+            sleep(50);
+        }
+        
+        LOG.debug("Finished sending text to secure field");
+    }
+
+    /**
+     * Sleep helper method
+     */
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
      * Get element text
      */
     public String getText(By locator) {
@@ -126,10 +157,6 @@ public class ActionUtils {
 
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
         element.click();
-//        new Actions(driver)
-//            .scrollToElement(element)
-//            .click(element)
-//            .perform();
     }
 }
 
