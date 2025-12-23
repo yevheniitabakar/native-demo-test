@@ -5,22 +5,16 @@ import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.InteractsWithApps;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.ios.IOSDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility for managing app lifecycle and navigation
+ * Utility for managing app lifecycle
  */
+@Slf4j
+@UtilityClass
 public class AppUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AppUtils.class);
-
-    private AppUtils() {
-    }
-
-    /**
-     * Close external browser (Chrome on Android, Safari on iOS)
-     */
     public static void closeBrowser() {
         AppiumDriver driver = DriverManager.getDriver();
 
@@ -32,12 +26,12 @@ public class AppUtils {
     }
 
     private static void terminateApp(AppiumDriver driver, String bundleId) {
-        LOG.info("Terminating app: {}", bundleId);
+        log.info("Terminating app: {}", bundleId);
         try {
             ((InteractsWithApps) driver).terminateApp(bundleId);
-            LOG.info("App terminated: {}", bundleId);
+            log.info("App terminated: {}", bundleId);
         } catch (Exception e) {
-            LOG.warn("Failed to terminate app {}: {}", bundleId, e.getMessage());
+            log.warn("Failed to terminate app {}: {}", bundleId, e.getMessage());
         }
     }
 }

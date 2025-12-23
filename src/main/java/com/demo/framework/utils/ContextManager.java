@@ -3,18 +3,16 @@ package com.demo.framework.utils;
 import com.demo.framework.drivers.DriverManager;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.remote.SupportsContextSwitching;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
 /**
  * Manages context switching between Native and WebView contexts.
- * Used for hybrid app testing where WebView components are present.
  */
+@Slf4j
 public class ContextManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ContextManager.class);
     private static final String NATIVE_CONTEXT = "NATIVE_APP";
     private static final String WEBVIEW_PREFIX = "WEBVIEW";
     private static final int DEFAULT_TIMEOUT_SECONDS = 10;
@@ -26,27 +24,19 @@ public class ContextManager {
         this.driver = DriverManager.getDriver();
     }
 
-    /**
-     * Wait for WebView context to become available
-     */
     public void waitForWebView() {
         waitForWebView(DEFAULT_TIMEOUT_SECONDS);
     }
 
-    /**
-     * Wait for WebView context to become available with custom timeout
-     *
-     * @param timeoutSeconds Maximum time to wait for WebView
-     */
     public void waitForWebView(int timeoutSeconds) {
-        LOG.info("Waiting for WebView context to be available (timeout: {}s)", timeoutSeconds);
+        log.info("Waiting for WebView context (timeout: {}s)", timeoutSeconds);
         long endTime = System.currentTimeMillis() + (timeoutSeconds * 1000L);
 
         while (System.currentTimeMillis() < endTime) {
             Set<String> contexts = getContextSwitchingDriver().getContextHandles();
             for (String context : contexts) {
                 if (context.contains(WEBVIEW_PREFIX)) {
-                    LOG.info("WebView context found: {}", context);
+                    log.info("WebView context found: {}", context);
                     return;
                 }
             }
@@ -54,86 +44,50 @@ public class ContextManager {
                 Thread.sleep(POLL_INTERVAL_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                LOG.warn("Wait for WebView interrupted");
+                log.warn("Wait for WebView interrupted");
                 break;
             }
         }
-        LOG.warn("WebView context not found within {}s timeout", timeoutSeconds);
+        log.warn("WebView context not found within {}s timeout", timeoutSeconds);
     }
 
-    /**
-     * Switch to WebView context
-     */
     public void switchToWebView() {
-        LOG.info("Switching to WebView context");
+        log.info("Switching to WebView context");
         SupportsContextSwitching contextDriver = getContextSwitchingDriver();
         Set<String> contexts = contextDriver.getContextHandles();
-        LOG.debug("Available contexts: {}", contexts);
 
         for (String context : contexts) {
             if (context.contains(WEBVIEW_PREFIX)) {
                 contextDriver.context(context);
-                LOG.info("Switched to WebView context: {}", context);
+                log.info("Switched to WebView context: {}", context);
                 return;
             }
         }
-        LOG.warn("No WebView context available. Available contexts: {}", contexts);
+        log.warn("No WebView context available");
     }
 
-    /**
-     * Switch back to Native context
-     */
     public void switchToNative() {
-        LOG.info("Switching to Native context");
+        log.info("Switching to Native context");
         getContextSwitchingDriver().context(NATIVE_CONTEXT);
-        LOG.info("Switched to Native context: {}", NATIVE_CONTEXT);
     }
 
-    /**
-     * Get current context
-     *
-     * @return Current context name
-     */
     public String getCurrentContext() {
-        String context = getContextSwitchingDriver().getContext();
-        LOG.debug("Current context: {}", context);
-        return context;
+        return getContextSwitchingDriver().getContext();
     }
 
-    /**
-     * Check if currently in WebView context
-     *
-     * @return true if in WebView context
-     */
     public boolean isInWebViewContext() {
         String context = getCurrentContext();
         return context != null && context.contains(WEBVIEW_PREFIX);
     }
 
-    /**
-     * Check if currently in Native context
-     *
-     * @return true if in Native context
-     */
     public boolean isInNativeContext() {
-        String context = getCurrentContext();
-        return NATIVE_CONTEXT.equals(context);
+        return NATIVE_CONTEXT.equals(getCurrentContext());
     }
 
-    /**
-     * Get all available contexts
-     *
-     * @return Set of available context names
-     */
     public Set<String> getAvailableContexts() {
-        Set<String> contexts = getContextSwitchingDriver().getContextHandles();
-        LOG.debug("Available contexts: {}", contexts);
-        return contexts;
+        return getContextSwitchingDriver().getContextHandles();
     }
 
-    /**
-     * Cast driver to SupportsContextSwitching for context operations
-     */
     private SupportsContextSwitching getContextSwitchingDriver() {
         return (SupportsContextSwitching) driver;
     }

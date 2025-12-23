@@ -2,7 +2,6 @@ package com.demo.framework.pages.interfaces;
 
 /**
  * Interface for Login Page
- * Defines UI contract for authentication screen
  */
 public interface LoginPage {
 
@@ -14,9 +13,6 @@ public interface LoginPage {
 
     void clickLoginButton();
 
-    void login(String username, String password);
-
-    String getErrorMessage();
 
     boolean isInvalidEmailErrorMessageDisplayed();
 

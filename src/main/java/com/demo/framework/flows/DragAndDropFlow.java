@@ -4,17 +4,14 @@ import com.demo.framework.pages.PageFactory;
 import com.demo.framework.pages.interfaces.DragPage;
 import com.demo.framework.pages.interfaces.HomePage;
 import io.qameta.allure.Step;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Flow class for Drag and Drop functionality.
  * Orchestrates drag and drop gesture actions.
- * Platform-agnostic - no platform checks allowed here.
  */
+@Slf4j
 public class DragAndDropFlow {
-
-    private static final Logger LOG = LoggerFactory.getLogger(DragAndDropFlow.class);
 
     private final HomePage homePage;
     private final DragPage dragPage;
@@ -26,35 +23,28 @@ public class DragAndDropFlow {
 
     @Step("Navigate to Drag and Drop screen")
     public DragAndDropFlow navigateToDragAndDrop() {
-        LOG.info("Navigating to Drag and Drop screen");
+        log.info("Navigating to Drag and Drop screen");
         homePage.clickDragDropLink();
         return this;
     }
 
     @Step("Drag element to drop zone")
     public DragAndDropFlow dragElementToDropZone() {
-        LOG.info("Dragging element to drop zone");
+        log.info("Dragging element to drop zone");
         dragPage.dragElementToDropZone();
-        return this;
-    }
-
-    @Step("Drag element from position {sourceIndex} to position {targetIndex}")
-    public DragAndDropFlow dragElement(int sourceIndex, int targetIndex) {
-        LOG.info("Dragging element from {} to {}", sourceIndex, targetIndex);
-        dragPage.dragElement(sourceIndex, targetIndex);
         return this;
     }
 
     @Step("Reset drag and drop")
     public DragAndDropFlow resetDragDrop() {
-        LOG.info("Resetting drag and drop");
+        log.info("Resetting drag and drop");
         dragPage.resetDragDrop();
         return this;
     }
 
     @Step("Drag element and release elsewhere (not on target)")
     public DragAndDropFlow dragAndReleaseElsewhere() {
-        LOG.info("Dragging element and releasing elsewhere");
+        log.info("Dragging element and releasing elsewhere");
         dragPage.dragAndReleaseElsewhere();
         return this;
     }
@@ -75,9 +65,6 @@ public class DragAndDropFlow {
         return dragPage.isDropZoneVisible();
     }
 
-    public String getSuccessMessage() {
-        return dragPage.getSuccessMessage();
-    }
 
     public String getElementState() {
         return dragPage.getElementState();
