@@ -4,8 +4,31 @@ echo "=========================================="
 echo "Mobile Test Automation Framework Runner"
 echo "=========================================="
 
-# Default platform is android if not specified
-PLATFORM="${1:-android}"
+# Get platform from argument or prompt user
+if [ -n "$1" ]; then
+    PLATFORM="$1"
+else
+    echo ""
+    echo "Please select a platform:"
+    echo "  1) android"
+    echo "  2) ios"
+    echo ""
+    read -p "Enter your choice (android/ios or 1/2): " user_input
+    
+    case "$user_input" in
+        1|android|Android|ANDROID)
+            PLATFORM="android"
+            ;;
+        2|ios|iOS|IOS)
+            PLATFORM="ios"
+            ;;
+        *)
+            echo "❌ Invalid selection: $user_input"
+            echo "Please enter 'android', 'ios', '1', or '2'"
+            exit 1
+            ;;
+    esac
+fi
 
 # Validate platform parameter
 if [[ "$PLATFORM" != "android" && "$PLATFORM" != "ios" ]]; then
@@ -172,6 +195,36 @@ if [ $EXIT_CODE -eq 0 ]; then
 else
     echo "❌ Test execution failed with exit code: $EXIT_CODE"
 fi
+echo "=========================================="
+
+# Cleanup: Shutdown device
+echo ""
+echo "5. Cleaning up - shutting down device..."
+
+if [ "$PLATFORM" = "android" ]; then
+    EMULATOR_ID=$(adb devices | grep "emulator" | awk '{print $1}' | head -1 || true)
+    if [ -n "$EMULATOR_ID" ]; then
+        echo "Shutting down Android emulator: $EMULATOR_ID..."
+        adb -s "$EMULATOR_ID" emu kill > /dev/null 2>&1 || true
+        echo "✓ Android emulator shutdown initiated"
+    else
+        echo "No Android emulator to shutdown"
+    fi
+
+elif [ "$PLATFORM" = "ios" ]; then
+    SIMULATOR_UDID=$(xcrun simctl list devices | grep "(Booted)" | head -1 | sed -E 's/.*\(([A-F0-9-]{36})\).*/\1/' || true)
+    if [ -n "$SIMULATOR_UDID" ]; then
+        echo "Shutting down iOS simulator: $SIMULATOR_UDID..."
+        xcrun simctl shutdown "$SIMULATOR_UDID" > /dev/null 2>&1 || true
+        echo "✓ iOS simulator shutdown completed"
+    else
+        echo "No iOS simulator to shutdown"
+    fi
+fi
+
+echo ""
+echo "=========================================="
+echo "Cleanup complete. Exiting."
 echo "=========================================="
 
 exit $EXIT_CODE

@@ -49,7 +49,7 @@ unzip chromedriver_mac64.zip && rm chromedriver_mac64.zip
 ## Running Tests
 
 ### Entry Point: `run_tests.sh` (Recommended)
-``
+
 The recommended way to run tests. This script automatically manages the complete test lifecycle:
 
 1. **Device Management** - Boots emulator/simulator if not running, creates one if none exists
@@ -58,9 +58,8 @@ The recommended way to run tests. This script automatically manages the complete
 4. **Test Execution** - Runs tests via Gradle
 
 ```bash
-`./run_tests.sh android`    # Run all Android tests
-`./run_tests.sh ios `       # Run all iOS tests
-```
+./run_tests.sh android    # Run all Android tests
+./run_tests.sh ios        # Run all iOS tests
 
 **Device defaults** (configured in `scripts/device-manager.sh`):
 - Android: Pixel 7, API 34 (Android 14)

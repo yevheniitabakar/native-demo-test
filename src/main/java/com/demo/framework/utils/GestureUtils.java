@@ -19,6 +19,7 @@ import java.util.Collections;
 public class GestureUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(GestureUtils.class);
+    private static final Duration SWIPE_DURATION = Duration.ofMillis(600);
     private final AppiumDriver driver;
 
     public GestureUtils(AppiumDriver driver) {
@@ -112,7 +113,7 @@ public class GestureUtils {
             Sequence sequence = new Sequence(finger, 0)
                     .addAction(finger.createPointerMove(Duration.ZERO, PointerInput.Origin.viewport(), startX, startY))
                     .addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()))
-                    .addAction(finger.createPointerMove(Duration.ofMillis(250), PointerInput.Origin.viewport(), endX, endY))
+                    .addAction(finger.createPointerMove(SWIPE_DURATION, PointerInput.Origin.viewport(), endX, endY))
                     .addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
 
             driver.perform(Collections.singletonList(sequence));
