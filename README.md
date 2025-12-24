@@ -1,124 +1,276 @@
 # Native Mobile Test Automation Framework
 
-Production-ready mobile test automation framework using Appium, Java 17, TestNG, and Allure Reporting.
+A mobile test automation framework for Android and iOS applications using Appium, Java, TestNG, and Allure reporting.
 
-## Tech Stack
+## Project Overview
+
+This framework provides cross-platform mobile test automation with a clean separation between test logic and infrastructure management. It supports both Android emulators and iOS simulators, with automated device provisioning and lifecycle management.
+
+**Supported Platforms:**
+- Android (emulator)
+- iOS (simulator)
+
+## Technology Stack
 
 | Component | Version |
 |-----------|---------|
 | Java | 17 |
+| Appium | 3.x (java-client 9.2.2) |
 | TestNG | 7.10.2 |
-| Appium | 9.2.2 |
 | Gradle | 8.6 |
 | Allure | 2.28.1 |
 
-## Features
-
-- **SOLID Principles** and design patterns
-- **Layered Architecture**: Tests → Flows → Page Interfaces → Platform Implementations
-- **Cross-platform Support**: Android & iOS with platform-specific Page Objects
-- **PageFactory Pattern**: Automatic platform resolution
-- **TestNG Groups**: smoke, regression, login, swipe, webview, drag
-- **Allure Reporting** with environment details and screenshots
-- **Comprehensive Logging**: SLF4J + Logback
-
 ## Prerequisites
 
-- Java 17
-- Android SDK (for Android) / Xcode (for iOS)
-- Appium: `npm install -g appium`
-- Appium drivers: `appium driver install uiautomator2` / `appium driver install xcuitest`
+The following tools must be installed before running tests:
 
-### WebView Testing (Android)
+| Tool | Required For | Installation |
+|------|--------------|--------------|
+| Java JDK 17 | Framework runtime | [Download](https://adoptium.net/) or `brew install openjdk@17` |
+| Node.js 18+ | Appium server | `brew install node` |
+| Appium 3.x | Mobile automation | `npm install -g appium` |
+| Appium UiAutomator2 Driver | Android testing | `appium driver install uiautomator2` |
+| Appium XCUITest Driver | iOS testing | `appium driver install xcuitest` |
+| Android SDK | Android testing | [Android Studio](https://developer.android.com/studio) or `brew install --cask android-studio` |
+| Xcode | iOS testing | Mac App Store (macOS only) |
+| Xcode Command Line Tools | iOS testing | `xcode-select --install` |
+| Allure CLI | Report generation | `brew install allure` |
 
-ChromeDriver is required for WebView context switching. Setup:
+<details>
+<summary><strong>Verify Installation</strong></summary>
 
 ```bash
-# Install Chromium driver (optional, for auto-download support)
+# Java
+java -version                    # Should show Java 17
+
+# Node.js
+node -v                          # Should show v18+
+
+# Appium
+appium -v                        # Should show 3.x
+appium driver list --installed   # Should show uiautomator2 and/or xcuitest
+
+# Android (if testing Android)
+adb --version
+emulator -list-avds
+
+# iOS (if testing iOS, macOS only)
+xcrun simctl list devices
+```
+
+</details>
+
+<details>
+<summary><strong>Setup Instructions</strong></summary>
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd native-demo-test
+```
+
+### 2. Install Appium and Drivers
+
+```bash
+# Install Appium globally
+npm install -g appium
+
+# Install platform drivers
+appium driver install uiautomator2    # For Android
+appium driver install xcuitest        # For iOS
+```
+
+### 3. Verify Android Setup (for Android testing)
+
+```bash
+# Ensure ANDROID_HOME is set
+echo $ANDROID_HOME
+
+# If not set, add to ~/.zshrc or ~/.bashrc:
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools
+
+# Verify adb is available
+adb --version
+```
+
+### 4. Verify iOS Setup (for iOS testing, macOS only)
+
+```bash
+# Accept Xcode license
+sudo xcodebuild -license accept
+
+# Verify simulators are available
+xcrun simctl list devices
+```
+
+### 5. WebView Testing (Android)
+
+For tests involving WebView context switching, ChromeDriver is required:
+
+```bash
+# Option 1: Install Appium Chromium driver (recommended)
 appium driver install chromium
 
-# Or manually download ChromeDriver matching your WebView Chrome version:
+# Option 2: Manual ChromeDriver installation
 mkdir -p ~/.appium/chromedriver
-cd ~/.appium/chromedriver
-# Download from: https://chromedriver.chromium.org/downloads
-# Example for Chrome 113:
-curl -O https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_mac64.zip
-unzip chromedriver_mac64.zip && rm chromedriver_mac64.zip
+# Download matching version from https://chromedriver.chromium.org/downloads
 ```
+
+</details>
 
 ## Running Tests
 
-### Entry Point: `run_tests.sh` (Recommended)
+### Recommended: `run_tests.sh`
 
-The recommended way to run tests. This script automatically manages the complete test lifecycle:
+The `run_tests.sh` script is the **primary entry point** for running tests. It handles the complete test lifecycle automatically:
 
-1. **Device Management** - Boots emulator/simulator if not running, creates one if none exists
-2. **Appium Server** - Starts Appium if not running
-3. **App Installation** - Installs the test app on the device
-4. **Test Execution** - Runs tests via Gradle
-
-```bash
-./run_tests.sh android    # Run all Android tests
-./run_tests.sh ios        # Run all iOS tests
-
-**Device defaults** (configured in `scripts/device-manager.sh`):
-- Android: Pixel 7, API 34 (Android 14)
-- iOS: iPhone 16, iOS 26.1
-
-### Direct Gradle Execution
-
-Use this when you want more control or the device is already booted and Appium is running.
-
-**Prerequisites:**
-- Device/emulator must be booted
-- Appium server must be running (`appium`)
+1. **Device Management** — Boots an emulator/simulator, or creates one if none exists
+2. **Appium Server** — Starts Appium if not already running
+3. **App Installation** — Installs the test application on the device
+4. **Test Execution** — Runs all tests via Gradle
+5. **Cleanup** — Shuts down the device after execution
 
 ```bash
-# Run all tests
+# Run with platform argument
+./run_tests.sh android
+./run_tests.sh ios
+
+# Run interactively (prompts for platform selection)
+./run_tests.sh
+```
+
+This is the recommended approach because it ensures a consistent, reproducible test environment without manual setup.
+
+### Alternative: Direct Gradle Execution
+
+Use direct Gradle commands when you need more control, such as running specific tests or when the device and Appium are already running.
+
+**Prerequisites for direct execution:**
+- Device/emulator must be booted and ready
+- Appium server must be running (`appium` in a separate terminal)
+- App must be installed on the device
+
+```bash
+# Run all tests for a platform
 ./gradlew test -Dplatform=android
 ./gradlew test -Dplatform=ios
 
-# Run specific test suite
+# Run a specific test suite
 ./gradlew test -Dplatform=android -DsuiteXmlFile=smoke.xml
 
 # Run specific test groups
 ./gradlew test -Dplatform=ios -Dgroups=login,smoke
+
+# Run a single test class
+./gradlew test -Dplatform=android --tests "LoginTests"
 ```
 
-### Device Management Script
+## Device Management
 
-Standalone device management without running tests:
+Device management is implemented in shell scripts (`run_tests.sh`, `scripts/device-manager.sh`) rather than in Java code. This is a deliberate architectural decision:
+
+**Why shell-based device management?**
+- **Separation of concerns** — Java code focuses purely on test logic, Page Objects, and framework architecture
+- **Simplicity** — Shell scripts are the natural tool for interacting with `adb`, `emulator`, and `xcrun simctl`
+- **Portability** — Device setup can be modified without recompiling Java code
+- **Industry alignment** — CI/CD pipelines typically manage devices at the infrastructure level, not within test code
+
+### Default Devices
+
+| Platform | Device | OS Version |
+|----------|--------|------------|
+| Android | Pixel 7 | API 34 (Android 14) |
+| iOS | iPhone 16 | iOS 18.1 |
+
+### Standalone Device Management
+
+The device manager script can be used independently:
 
 ```bash
-# Check device status
+# Check if a device is running
 ./scripts/device-manager.sh android check
 ./scripts/device-manager.sh ios check
 
-# Start device (creates if not exists)
+# Start a device (creates if none exists)
 ./scripts/device-manager.sh android start
 ./scripts/device-manager.sh ios start
 
 # List available devices
 ./scripts/device-manager.sh android list
 ./scripts/device-manager.sh ios list
-./scripts/device-manager.sh ios runtimes    # List iOS runtimes
+./scripts/device-manager.sh ios runtimes    # List available iOS runtimes
 ```
 
-## Test Suites
+## Test Reports
+
+Test results are generated using Allure. Results are written to `build/allure-results/` during test execution.
+
+### Generate and View Report
+
+```bash
+# Clean previous results (recommended before a new test run)
+./gradlew cleanAllureResults
+
+# Run tests
+./run_tests.sh android
+
+# Generate and open report in browser
+./gradlew allureServe
+```
+
+The report includes:
+- Test execution timeline
+- Pass/fail statistics
+- Screenshots on failure
+- Environment information
+- Step-by-step test execution details
+
+## Test Suites and Groups
+
+### Available Suites
 
 | Suite | File | Description |
 |-------|------|-------------|
 | Default | `testng.xml` | All tests |
-| Smoke | `smoke.xml` | Quick validation (group: smoke) |
+| Smoke | `smoke.xml` | Quick validation tests |
 
-## Test Scenarios & Groups
+### Test Groups
 
-| Test Class | Groups | Test Cases |
-|------------|--------|------------|
-| `LoginTests` | login, smoke, regression | TC_1.1-1.3: Login flows |
-| `SwipeTests` | swipe, smoke, regression | TC_2.1-2.3: Carousel swipe |
-| `WebViewTests` | webview, smoke, regression | TC_3.1-3.3: WebView navigation |
-| `DragAndDropTests` | drag, smoke, regression | TC_4.1-4.3: Drag & drop |
+| Test Class | Groups | Description |
+|------------|--------|-------------|
+| `LoginTests` | login, smoke, regression | Login validation flows |
+| `SwipeTests` | swipe, regression | Carousel swipe gestures |
+| `WebViewTests` | webview, regression | WebView context switching |
+| `DragAndDropTests` | drag, regression | Drag and drop interactions |
+
+## Project Structure
+
+```
+├── run_tests.sh                    # Primary test entry point
+├── scripts/
+│   └── device-manager.sh           # Device lifecycle management
+├── src/main/java/com/demo/framework/
+│   ├── config/                     # Configuration management
+│   ├── drivers/                    # Appium driver setup
+│   ├── flows/                      # Business action flows
+│   ├── pages/
+│   │   ├── interfaces/             # Page contracts
+│   │   ├── android/                # Android implementations
+│   │   ├── ios/                    # iOS implementations
+│   │   └── PageFactory.java        # Platform-aware page creation
+│   └── utils/                      # Utilities (actions, waits, gestures)
+├── src/test/java/com/demo/framework/
+│   ├── tests/                      # Test classes
+│   └── listeners/                  # Allure reporting listeners
+├── src/test/resources/
+│   ├── testng.xml                  # Default test suite
+│   └── smoke.xml                   # Smoke test suite
+└── testApps/
+    ├── android/                    # Android APK
+    └── ios/                        # iOS app bundle
+```
 
 ## Architecture
 
@@ -129,45 +281,17 @@ Flow Layer (LoginFlow, SwipeFlow, WebViewFlow, DragAndDropFlow)
        ↓
 Page Interfaces (HomePage, LoginPage, SwipePage, WebViewPage, DragPage)
        ↓
-Platform Implementations (Android*/iOS*)
+Platform Implementations (AndroidHomePage, IOSHomePage, etc.)
        ↓
 PageFactory → Appium Driver
 ```
 
-## Project Structure
+## Notes
 
-```
-src/main/java/com/demo/framework/
-├── config/           Configuration management
-├── drivers/          Appium & device management
-├── flows/            Business action flows (LoginFlow, SwipeFlow, etc.)
-├── pages/
-│   ├── interfaces/   Page contracts (HomePage, LoginPage, etc.)
-│   ├── android/      Android implementations
-│   ├── ios/          iOS implementations
-│   ├── BasePage.java
-│   └── PageFactory.java
-└── utils/            Utilities
+This project was developed with the assistance of AI-based tools (ChatGPT 5.2, Claude Opus 4.5)
+for accelerating implementation and reducing boilerplate.
 
-src/test/java/com/demo/framework/
-├── tests/            Feature-based test classes
-│   ├── smoke/        SampleTest
-│   ├── LoginTests.java
-│   ├── SwipeTests.java
-│   ├── WebViewTests.java
-│   └── DragAndDropTests.java
-└── listeners/        Allure reporting
+All architectural decisions, framework design, locator strategies,
+and testing approaches were defined and reviewed by the author.
 
-src/test/resources/
-├── smoke.xml         Smoke suite
-└── testng.xml        Default suite (all tests)
-```
-
-## Generate Allure Report
-
-```bash
-# Clean previous Allure results (recommended before new test run)
-./gradlew cleanAllureResults
-# Generate and open Allure report
-./gradlew allureServe
-```
+AI tools were used as a productivity aid, not as a substitute for engineering judgment.
