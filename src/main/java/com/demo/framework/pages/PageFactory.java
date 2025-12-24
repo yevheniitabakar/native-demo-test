@@ -9,40 +9,51 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Factory for creating platform-specific Page Object instances.
+ * Platform is resolved dynamically at runtime to support multi-platform test runs.
  */
 @Slf4j
 @UtilityClass
 public class PageFactory {
 
-    private static final String PLATFORM = new ConfigProvider().getPlatform().toLowerCase();
+    /**
+     * Get current platform dynamically (not cached) to support runtime changes
+     */
+    private static String getPlatform() {
+        return new ConfigProvider().getPlatform().toLowerCase();
+    }
 
     public static HomePage homePage() {
-        log.debug("Creating HomePage for platform: {}", PLATFORM);
-        return isAndroid() ? new AndroidHomePage() : new IOSHomePage();
+        String platform = getPlatform();
+        log.debug("Creating HomePage for platform: {}", platform);
+        return isAndroid(platform) ? new AndroidHomePage() : new IOSHomePage();
     }
 
     public static LoginPage loginPage() {
-        log.debug("Creating LoginPage for platform: {}", PLATFORM);
-        return isAndroid() ? new AndroidLoginPage() : new IOSLoginPage();
+        String platform = getPlatform();
+        log.debug("Creating LoginPage for platform: {}", platform);
+        return isAndroid(platform) ? new AndroidLoginPage() : new IOSLoginPage();
     }
 
     public static SwipePage swipePage() {
-        log.debug("Creating SwipePage for platform: {}", PLATFORM);
-        return isAndroid() ? new AndroidSwipePage() : new IOSSwipePage();
+        String platform = getPlatform();
+        log.debug("Creating SwipePage for platform: {}", platform);
+        return isAndroid(platform) ? new AndroidSwipePage() : new IOSSwipePage();
     }
 
     public static WebViewPage webViewPage() {
-        log.debug("Creating WebViewPage for platform: {}", PLATFORM);
-        return isAndroid() ? new AndroidWebViewPage() : new IOSWebViewPage();
+        String platform = getPlatform();
+        log.debug("Creating WebViewPage for platform: {}", platform);
+        return isAndroid(platform) ? new AndroidWebViewPage() : new IOSWebViewPage();
     }
 
     public static DragPage dragPage() {
-        log.debug("Creating DragPage for platform: {}", PLATFORM);
-        return isAndroid() ? new AndroidDragPage() : new IOSDragPage();
+        String platform = getPlatform();
+        log.debug("Creating DragPage for platform: {}", platform);
+        return isAndroid(platform) ? new AndroidDragPage() : new IOSDragPage();
     }
 
-    private static boolean isAndroid() {
-        return "android".equalsIgnoreCase(PLATFORM);
+    private static boolean isAndroid(String platform) {
+        return "android".equalsIgnoreCase(platform);
     }
 }
 

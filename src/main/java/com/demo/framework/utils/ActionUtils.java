@@ -113,6 +113,19 @@ public class ActionUtils {
     }
 
     /**
+     * Quick check if element is displayed without waiting
+     * Use this for swipe/scroll loops where you need fast checks between iterations
+     */
+    public boolean isDisplayedQuick(By locator) {
+        LOG.debug("Quick check if element is displayed: {}", locator);
+        try {
+            return driver.findElement(locator).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
      * Check if element is enabled
      */
     public boolean isEnabled(By locator) {

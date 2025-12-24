@@ -39,15 +39,12 @@ public class ConfigProvider {
     public AppiumConfig getAppiumConfig() {
         String platformName = getPlatformName();
         String appPath = getAppPathForPlatform(platformName);
-        boolean isIOS = "IOS".equalsIgnoreCase(platformName);
         
-        // For iOS, default to noReset=true and fullReset=false to keep simulator alive
-        boolean fullReset = isIOS 
-                ? getBoolean("appium:fullReset", false) 
-                : getBoolean("appium:fullReset", true);
-        boolean noReset = isIOS 
-                ? getBoolean("appium:noReset", true) 
-                : getBoolean("appium:noReset", false);
+        // Default to noReset=true and fullReset=false for both platforms
+        // This keeps the device/emulator alive and uses terminateApp() between tests
+        // for faster execution while still ensuring clean app state
+        boolean fullReset = getBoolean("appium:fullReset", false);
+        boolean noReset = getBoolean("appium:noReset", true);
 
         return new AppiumConfig(
                 platformName,

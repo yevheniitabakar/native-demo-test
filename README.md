@@ -169,10 +169,6 @@ src/test/resources/
 ```bash
 # Clean previous Allure results (recommended before new test run)
 ./gradlew cleanAllureResults
-
-# Run tests
-./gradlew test -Dplatform=android
-
 # Generate and open Allure report
 ./gradlew allureServe
 ```

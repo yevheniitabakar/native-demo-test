@@ -3,6 +3,8 @@ package com.demo.framework.tests;
 import com.demo.framework.config.AppiumConfig;
 import com.demo.framework.config.ConfigProvider;
 import com.demo.framework.drivers.DriverManager;
+import com.demo.framework.drivers.device.DeviceManagerFactory;
+import com.demo.framework.drivers.device.IDeviceManager;
 import io.appium.java_client.AppiumDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,7 @@ public abstract class BaseTest {
     private static AppiumConfig appiumConfig;
 
     /**
-     * Load configuration before suite runs
+     * Load configuration and ensure device is ready before suite runs
      */
     @BeforeSuite(alwaysRun = true)
     public void loadConfig() {
@@ -33,6 +35,55 @@ public abstract class BaseTest {
         ConfigProvider provider = new ConfigProvider();
         appiumConfig = provider.getAppiumConfig();
         LOG.info("Framework configuration loaded: {}", appiumConfig);
+        
+        // Ensure device is booted before tests start
+        ensureDeviceReady(appiumConfig);
+    }
+    
+    /**
+     * Ensure device/emulator/simulator is booted and ready for testing.
+     * If UDID is configured, verifies that specific device is booted.
+     * If no UDID, attempts to start the configured device by name.
+     */
+    private void ensureDeviceReady(AppiumConfig config) {
+        String platform = config.platformName();
+        String deviceName = config.deviceName();
+        String udid = config.udid();
+        
+        LOG.info("Ensuring {} device is ready: {} (UDID: {})", platform, deviceName, udid);
+        
+        try {
+            IDeviceManager deviceManager = DeviceManagerFactory.getDeviceManager(platform);
+            
+            // If UDID is specified, check if that device is booted
+            if (udid != null && !udid.isBlank()) {
+                if (deviceManager.isDeviceBooted(udid)) {
+                    LOG.info("Device {} is already booted and ready", udid);
+                    return;
+                }
+                LOG.warn("Device with UDID {} is not booted. Tests may fail if device is not available.", udid);
+                return;
+            }
+            
+            // No specific UDID - check if any device of the platform is booted
+            boolean anyDeviceBooted = deviceManager.getAvailableDevices().stream()
+                    .anyMatch(device -> deviceManager.isDeviceBooted(device.getUdid()));
+            
+            if (anyDeviceBooted) {
+                LOG.info("A {} device is already booted and ready", platform);
+                return;
+            }
+            
+            // No device booted - attempt to start one
+            LOG.info("No {} device is booted. Attempting to start: {}", platform, deviceName);
+            deviceManager.startDevice(deviceName);
+            LOG.info("Device {} started successfully", deviceName);
+            
+        } catch (Exception e) {
+            // Log warning but don't fail - let the test fail with better error if device isn't available
+            LOG.warn("Could not verify/start device (may already be managed externally): {}", e.getMessage());
+            LOG.info("Continuing with test execution - Appium will report if device is unavailable");
+        }
     }
 
     /**
@@ -77,12 +128,20 @@ public abstract class BaseTest {
         
         try {
             AppiumDriver driver = DriverManager.getDriver();
-            String bundleId = getBundleIdForPlatform(appiumConfig.platformName());
+            String platform = appiumConfig.platformName();
+            String appIdentifier = getBundleIdForPlatform(platform);
             
-            if (bundleId != null && driver != null) {
-                LOG.info("Terminating app: {}", bundleId);
+            if (appIdentifier != null && driver != null) {
+                LOG.info("Terminating app: {} on {}", appIdentifier, platform);
                 Map<String, Object> params = new HashMap<>();
-                params.put("bundleId", bundleId);
+                
+                // iOS uses "bundleId", Android uses "appId"
+                if ("IOS".equalsIgnoreCase(platform)) {
+                    params.put("bundleId", appIdentifier);
+                } else {
+                    params.put("appId", appIdentifier);
+                }
+                
                 driver.executeScript("mobile: terminateApp", params);
                 LOG.info("App terminated successfully");
             }

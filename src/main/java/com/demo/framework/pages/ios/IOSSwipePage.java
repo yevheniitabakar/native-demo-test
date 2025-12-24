@@ -14,8 +14,8 @@ import org.openqa.selenium.By;
 public class IOSSwipePage extends BasePage implements SwipePage {
 
     private static final By SWIPE_SCREEN = AppiumBy.accessibilityId("Swipe-screen");
-    private static final By HIDDEN_ELEMENT = AppiumBy.accessibilityId("WebdriverIO logo");
-
+    private static final By HIDDEN_TEXT = AppiumBy.iOSClassChain(
+            "**/XCUIElementTypeStaticText[`name == \"You found me!!!\"`]");
     private final GestureUtils gesture;
 
     public IOSSwipePage() {
@@ -55,7 +55,7 @@ public class IOSSwipePage extends BasePage implements SwipePage {
         log.info("Scrolling down to find hidden element on iOS");
         int maxScrolls = 5;
         for (int i = 0; i < maxScrolls; i++) {
-            if (isHiddenElementFound()) {
+            if (isHiddenTextFound()) {
                 log.info("Hidden element found after {} scrolls", i);
                 return;
             }
@@ -78,10 +78,10 @@ public class IOSSwipePage extends BasePage implements SwipePage {
     }
 
     @Override
-    public boolean isHiddenElementFound() {
+    public boolean isHiddenTextFound() {
         log.info("Checking if hidden element is found on iOS");
         try {
-            return actions.isDisplayed(HIDDEN_ELEMENT);
+            return actions.isDisplayed(HIDDEN_TEXT);
         } catch (Exception e) {
             return false;
         }
@@ -92,7 +92,8 @@ public class IOSSwipePage extends BasePage implements SwipePage {
         try {
             By cardLocator = AppiumBy.iOSNsPredicateString(
                     String.format("name CONTAINS '%s' OR label CONTAINS '%s'", cardName, cardName));
-            return actions.isDisplayed(cardLocator);
+            // Use quick check without wait for swipe loops
+            return actions.isDisplayedQuick(cardLocator);
         } catch (Exception e) {
             return false;
         }

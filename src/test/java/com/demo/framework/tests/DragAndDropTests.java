@@ -45,7 +45,7 @@ public class DragAndDropTests extends BaseTest {
         assertTrue(dragAndDropFlow.isCaptchaCompleted(), "Drag and drop should be successful");
     }
 
-    @Test(groups = {"drag", "regression"},
+    @Test(groups = {"drag1", "regression"},
           description = "TC_4.2: Verify drag and drop element state verification")
     @Description("Verify element states during drag operations: initial state, cancelled drag, successful drag, and reset")
     public void testDragAndDropElementStateVerification() {

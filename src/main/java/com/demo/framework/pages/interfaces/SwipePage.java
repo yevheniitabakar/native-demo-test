@@ -15,6 +15,6 @@ public interface SwipePage {
 
     boolean isCardDisplayed(String cardName);
 
-    boolean isHiddenElementFound();
+    boolean isHiddenTextFound();
 }
 

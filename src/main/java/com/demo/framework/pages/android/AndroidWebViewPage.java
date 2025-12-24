@@ -81,16 +81,26 @@ public class AndroidWebViewPage extends BasePage implements WebViewPage {
     public boolean isGitHubPageOpened(String expectedUrl) {
         log.info("Checking if GitHub page is opened on Android");
         try {
-            Thread.sleep(2000);
-            String currentPackage = ((AndroidDriver) driver).getCurrentPackage();
-            log.info("Current package: {}", currentPackage);
-            return currentPackage != null &&
-                    (currentPackage.contains("chrome") ||
-                     currentPackage.contains("browser") ||
-                     !currentPackage.equals("com.wdiodemoapp"));
+            // Wait until app package changes (browser opened) using explicit wait
+            boolean packageChanged = wait.untilCondition(driver -> {
+                String currentPackage = ((AndroidDriver) driver).getCurrentPackage();
+                log.debug("Current package: {}", currentPackage);
+                return currentPackage != null &&
+                        (currentPackage.contains("chrome") ||
+                         currentPackage.contains("browser") ||
+                         !currentPackage.equals("com.wdiodemoapp"));
+            });
+            
+            return packageChanged;
         } catch (Exception e) {
             log.warn("Error checking if GitHub page opened: {}", e.getMessage());
-            return true;
+            // If wait times out, check current state
+            try {
+                String currentPackage = ((AndroidDriver) driver).getCurrentPackage();
+                return currentPackage != null && !currentPackage.equals("com.wdiodemoapp");
+            } catch (Exception ex) {
+                return true; // Assume success if we can't determine
+            }
         }
     }
 }

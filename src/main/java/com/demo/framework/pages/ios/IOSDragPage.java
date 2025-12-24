@@ -89,39 +89,29 @@ public class IOSDragPage extends BasePage implements DragPage {
     public boolean isElementDroppedSuccessfully() {
         log.info("Checking if single element was dropped successfully");
         
+        // Brief pause for UI to settle after drag animation
+        wait.forDuration(Duration.ofMillis(300));
+        return isElementAtDropZone();
+    }
+    
+    /**
+     * Check if draggable element is now at the drop zone position
+     */
+    private boolean isElementAtDropZone() {
         try {
-            // Give a moment for UI to update after drop
-            Thread.sleep(300);
-            
-            // After successful drop, the draggable element should no longer be at the drag position
-            // It either disappears or moves to the drop zone position
             WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
             WebElement dropZone = driver.findElement(DROP_ZONE);
             
-            // Get current positions
-            int draggableX = draggable.getLocation().getX();
-            int draggableY = draggable.getLocation().getY();
-            int dropZoneX = dropZone.getLocation().getX();
-            int dropZoneY = dropZone.getLocation().getY();
-            
-            // If draggable is now at/near drop zone position, drop was successful
-            // Use a tolerance of ~50px to account for slight positioning differences
             int tolerance = 50;
-            boolean positionsMatch = Math.abs(draggableX - dropZoneX) < tolerance 
-                    && Math.abs(draggableY - dropZoneY) < tolerance;
+            boolean match = Math.abs(draggable.getLocation().getX() - dropZone.getLocation().getX()) < tolerance
+                    && Math.abs(draggable.getLocation().getY() - dropZone.getLocation().getY()) < tolerance;
             
-            log.info("Draggable pos: ({}, {}), DropZone pos: ({}, {}), Match: {}", 
-                    draggableX, draggableY, dropZoneX, dropZoneY, positionsMatch);
-            
-            return positionsMatch;
+            log.info("Drop check - positions match: {}", match);
+            return match;
             
         } catch (org.openqa.selenium.NoSuchElementException e) {
-            // If draggable element is no longer found, it was successfully dropped
             log.info("Draggable element no longer found - drop successful");
             return true;
-        } catch (Exception e) {
-            log.warn("Error checking drop status: {}", e.getMessage());
-            return false;
         }
     }
 

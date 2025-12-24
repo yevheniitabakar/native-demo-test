@@ -37,8 +37,8 @@ public class IOSWebViewPage extends BasePage implements WebViewPage {
     public boolean isWebViewDisplayed() {
         log.info("Checking if WebView is displayed on iOS");
         try {
-            Thread.sleep(2000); // Brief wait for WebView to load
-            return driver.findElement(WEB_CONTENT).isDisplayed();
+            wait.untilVisible(WEB_CONTENT);
+            return true;
         } catch (Exception e) {
             log.warn("WebView not displayed: {}", e.getMessage());
             return false;
@@ -71,11 +71,21 @@ public class IOSWebViewPage extends BasePage implements WebViewPage {
         }
     }
 
+    /**
+     * Verifies GitHub page is opened by checking for GitHub-specific UI elements.
+     * <p>
+     * <b>Why element verification instead of URL?</b>
+     * The app opens GitHub in an in-app browser (SFSafariViewController or WKWebView),
+     * where native URL access methods are not reliably exposed to Appium. Element-based
+     * verification confirms the page actually rendered with GitHub content visible to the user.
+     *
+     * @param expectedUrl the expected URL (not used on iOS due to in-app browser limitations)
+     * @return true if GitHub navigation elements are visible
+     */
     @Override
     public boolean isGitHubPageOpened(String expectedUrl) {
         log.info("Checking if GitHub page is opened on iOS");
         try {
-            // GitHub page opens within the app - check for GitHub navigation element
             By githubNavigation = AppiumBy.iOSClassChain(
                     "**/XCUIElementTypeOther[`name == \"Organization, navigation\"`]"
                     + "/XCUIElementTypeOther/XCUIElementTypeOther[1]");

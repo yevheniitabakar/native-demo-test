@@ -14,7 +14,8 @@ import org.openqa.selenium.By;
 public class AndroidSwipePage extends BasePage implements SwipePage {
 
     private static final By SWIPE_SCREEN = AppiumBy.accessibilityId("Swipe-screen");
-    private static final By HIDDEN_ELEMENT = AppiumBy.accessibilityId("WebdriverIO logo");
+    private static final By HIDDEN_TEXT = AppiumBy.androidUIAutomator(
+            "new UiSelector().text(\"You found me!!!\")");
 
     private final GestureUtils gesture;
 
@@ -55,7 +56,7 @@ public class AndroidSwipePage extends BasePage implements SwipePage {
         log.info("Scrolling down to find hidden element on Android");
         int maxScrolls = 5;
         for (int i = 0; i < maxScrolls; i++) {
-            if (isHiddenElementFound()) {
+            if (isHiddenTextFound()) {
                 log.info("Hidden element found after {} scrolls", i);
                 return;
             }
@@ -78,10 +79,10 @@ public class AndroidSwipePage extends BasePage implements SwipePage {
     }
 
     @Override
-    public boolean isHiddenElementFound() {
+    public boolean isHiddenTextFound() {
         log.info("Checking if hidden element is found on Android");
         try {
-            return actions.isDisplayed(HIDDEN_ELEMENT);
+            return actions.isDisplayed(HIDDEN_TEXT);
         } catch (Exception e) {
             return false;
         }
@@ -92,7 +93,8 @@ public class AndroidSwipePage extends BasePage implements SwipePage {
         try {
             By cardLocator = AppiumBy.androidUIAutomator(
                     String.format("new UiSelector().textContains(\"%s\")", cardName));
-            return actions.isDisplayed(cardLocator);
+            // Use quick check without wait for swipe loops
+            return actions.isDisplayedQuick(cardLocator);
         } catch (Exception e) {
             return false;
         }

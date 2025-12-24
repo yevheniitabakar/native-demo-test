@@ -54,7 +54,7 @@ public class SwipeFlow {
     }
 
     public boolean isHiddenElementFound() {
-        return swipePage.isHiddenElementFound();
+        return swipePage.isHiddenTextFound();
     }
 }
 

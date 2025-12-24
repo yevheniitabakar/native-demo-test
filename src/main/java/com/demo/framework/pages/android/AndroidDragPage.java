@@ -11,6 +11,7 @@ import org.openqa.selenium.interactions.Sequence;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -19,27 +20,29 @@ import java.util.Map;
 @Slf4j
 public class AndroidDragPage extends BasePage implements DragPage {
 
-    private static final Map<String, String> DRAG_DROP_PAIRS = Map.of(
-            "drag-l1", "drop-l1",
-            "drag-l2", "drop-l2",
-            "drag-l3", "drop-l3",
-            "drag-c1", "drop-c1",
-            "drag-c2", "drop-c2",
-            "drag-c3", "drop-c3",
-            "drag-r1", "drop-r1",
-            "drag-r2", "drop-r2",
-            "drag-r3", "drop-r3");
-    private static final By DRAGGABLE_ELEMENT = AppiumBy.androidUIAutomator("drag-l1");
-    private static final By DROP_ZONE = AppiumBy.androidUIAutomator("drop-l1");
+    private static final Map<String, String> DRAG_DROP_PAIRS = new LinkedHashMap<>() {{
+        put("drag-l1", "drop-l1");
+        put("drag-l2", "drop-l2");
+        put("drag-l3", "drop-l3");
+        put("drag-c1", "drop-c1");
+        put("drag-c2", "drop-c2");
+        put("drag-c3", "drop-c3");
+        put("drag-r1", "drop-r1");
+        put("drag-r2", "drop-r2");
+        put("drag-r3", "drop-r3");
+    }};
+    private static final By DRAGGABLE_ELEMENT = AppiumBy.accessibilityId("drag-l1");
+    private static final By DROP_ZONE = AppiumBy.accessibilityId("drop-l1");
     private static final By SUCCESS_MESSAGE = AppiumBy.androidUIAutomator(
             "new UiSelector().text(\"You made it, click retry if you want to try it again.\")");
-    private static final By RESET_BUTTON = AppiumBy.accessibilityId("button-Retry");
+    private static final By RESET_BUTTON = AppiumBy.xpath(
+            "//android.widget.TextView[@text=\"\uDB80\uDC6A\"]");
 
     @Override
     public boolean isPageLoaded() {
         log.info("Checking if Android Drag Page is loaded");
         try {
-            wait.untilVisible(AppiumBy.accessibilityId("drag-l1"));
+            wait.untilVisible(RESET_BUTTON);
             return true;
         } catch (Exception e) {
             log.warn("Android Drag Page not loaded: {}", e.getMessage());
@@ -76,7 +79,7 @@ public class AndroidDragPage extends BasePage implements DragPage {
     @Override
     public void dragAndReleaseElsewhere() {
         log.info("Dragging element and releasing elsewhere on Android");
-        WebElement draggable = wait.untilVisible(AppiumBy.accessibilityId("drag-l1"));
+        WebElement draggable = wait.untilVisible(DRAGGABLE_ELEMENT);
         int startX = draggable.getLocation().getX() + draggable.getSize().getWidth() / 2;
         int startY = draggable.getLocation().getY() + draggable.getSize().getHeight() / 2;
         performDragDrop(startX, startY, startX + 50, startY + 50);
@@ -86,39 +89,29 @@ public class AndroidDragPage extends BasePage implements DragPage {
     public boolean isElementDroppedSuccessfully() {
         log.info("Checking if single element was dropped successfully");
         
+        // Brief pause for UI to settle after drag animation
+        wait.forDuration(Duration.ofMillis(300));
+        return isElementAtDropZone();
+    }
+
+    /**
+     * Check if draggable element is now at the drop zone position
+     */
+    private boolean isElementAtDropZone() {
         try {
-            // Give a moment for UI to update after drop
-            Thread.sleep(300);
+            WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
+            WebElement dropZone = driver.findElement(DROP_ZONE);
             
-            // After successful drop, the draggable element should no longer be at the drag position
-            // It either disappears or moves to the drop zone position
-            WebElement draggable = driver.findElement(AppiumBy.accessibilityId("drag-l1"));
-            WebElement dropZone = driver.findElement(AppiumBy.accessibilityId("drop-l1"));
-            
-            // Get current positions
-            int draggableX = draggable.getLocation().getX();
-            int draggableY = draggable.getLocation().getY();
-            int dropZoneX = dropZone.getLocation().getX();
-            int dropZoneY = dropZone.getLocation().getY();
-            
-            // If draggable is now at/near drop zone position, drop was successful
-            // Use a tolerance of ~50px to account for slight positioning differences
             int tolerance = 50;
-            boolean positionsMatch = Math.abs(draggableX - dropZoneX) < tolerance 
-                    && Math.abs(draggableY - dropZoneY) < tolerance;
+            boolean match = Math.abs(draggable.getLocation().getX() - dropZone.getLocation().getX()) < tolerance
+                    && Math.abs(draggable.getLocation().getY() - dropZone.getLocation().getY()) < tolerance;
             
-            log.info("Draggable pos: ({}, {}), DropZone pos: ({}, {}), Match: {}", 
-                    draggableX, draggableY, dropZoneX, dropZoneY, positionsMatch);
-            
-            return positionsMatch;
+            log.info("Drop check - positions match: {}", match);
+            return match;
             
         } catch (org.openqa.selenium.NoSuchElementException e) {
-            // If draggable element is no longer found, it was successfully dropped
             log.info("Draggable element no longer found - drop successful");
             return true;
-        } catch (Exception e) {
-            log.warn("Error checking drop status: {}", e.getMessage());
-            return false;
         }
     }
 
@@ -145,7 +138,7 @@ public class AndroidDragPage extends BasePage implements DragPage {
     @Override
     public boolean isDraggableElementVisible() {
         try {
-            return actions.isDisplayed(AppiumBy.accessibilityId("drag-l1"));
+            return actions.isDisplayed(DRAGGABLE_ELEMENT);
         } catch (Exception e) {
             return false;
         }
@@ -154,7 +147,7 @@ public class AndroidDragPage extends BasePage implements DragPage {
     @Override
     public boolean isDropZoneVisible() {
         try {
-            return actions.isDisplayed(AppiumBy.accessibilityId("drop-l1"));
+            return actions.isDisplayed(DROP_ZONE);
         } catch (Exception e) {
             return false;
         }
@@ -163,7 +156,7 @@ public class AndroidDragPage extends BasePage implements DragPage {
     @Override
     public String getElementState() {
         try {
-            WebElement draggable = driver.findElement(AppiumBy.accessibilityId("drag-l1"));
+            WebElement draggable = driver.findElement(DRAGGABLE_ELEMENT);
             String result = String.format("x:%d,y:%d,visible:%s",
                     draggable.getLocation().getX(),
                     draggable.getLocation().getY(),

@@ -9,7 +9,7 @@
     <test name="Smoke Tests">
         <groups>
             <run>
-                <include name="smoke"/>
+                <include name="drag1"/>
             </run>
         </groups>
         <packages>

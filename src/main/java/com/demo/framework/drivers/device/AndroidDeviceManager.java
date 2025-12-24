@@ -76,10 +76,9 @@ public class AndroidDeviceManager implements IDeviceManager {
         try {
             ProcessBuilder pb = new ProcessBuilder(EMULATOR_COMMAND, "-avd", deviceName);
             pb.start();
-            LOG.info("Emulator started: {}", deviceName);
+            LOG.info("Emulator started, waiting for boot: {}", deviceName);
 
-            // Wait for device to be ready
-            Thread.sleep(5000);
+            // Poll until device is ready
             waitForDevice(deviceName);
         } catch (Exception e) {
             LOG.error("Error starting emulator", e);
@@ -176,23 +175,26 @@ public class AndroidDeviceManager implements IDeviceManager {
     }
 
     /**
-     * Wait for device to be ready
+     * Wait for device to be ready with polling
      */
-    private void waitForDevice(String deviceName) throws InterruptedException {
-        long maxWaitTime = System.currentTimeMillis() + 60000; // 60 seconds
-        while (System.currentTimeMillis() < maxWaitTime) {
+    private void waitForDevice(String deviceName) {
+        long deadline = System.currentTimeMillis() + 60000; // 60 seconds
+        while (System.currentTimeMillis() < deadline) {
             try {
                 String output = executeCommand(ADB_COMMAND, "devices");
                 if (output.contains(deviceName) && output.contains("device")) {
                     LOG.info("Device ready: {}", deviceName);
                     return;
                 }
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new FrameworkException("Interrupted while waiting for device boot", e);
             } catch (Exception e) {
-                LOG.debug("Device not ready yet");
+                LOG.debug("Device not ready yet: {}", e.getMessage());
             }
-            Thread.sleep(2000);
         }
-        throw new FrameworkException("Device timeout waiting for device: " + deviceName);
+        throw new FrameworkException("Timeout waiting for device: " + deviceName);
     }
 }
 

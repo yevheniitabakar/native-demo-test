@@ -90,8 +90,8 @@ public class IOSDeviceManager implements IDeviceManager {
             Process process = pb.start();
             process.waitFor();
 
-            LOG.info("Simulator started: {}", deviceName);
-            Thread.sleep(5000); // Wait for simulator to fully load
+            LOG.info("Simulator started, waiting for boot: {}", deviceName);
+            waitForDeviceBoot(device.getUdid(), 60000);
         } catch (Exception e) {
             LOG.error("Error starting simulator", e);
             throw new FrameworkException("Failed to start iOS simulator: " + deviceName, e);
@@ -152,6 +152,26 @@ public class IOSDeviceManager implements IDeviceManager {
     @Override
     public String getPlatformType() {
         return PLATFORM_TYPE;
+    }
+
+    /**
+     * Wait for device to boot with polling
+     */
+    private void waitForDeviceBoot(String udid, long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            if (isDeviceBooted(udid)) {
+                LOG.info("Simulator booted successfully: {}", udid);
+                return;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new FrameworkException("Interrupted while waiting for simulator boot", e);
+            }
+        }
+        throw new FrameworkException("Timeout waiting for simulator to boot: " + udid);
     }
 
     /**
