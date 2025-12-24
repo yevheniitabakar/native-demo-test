@@ -49,8 +49,11 @@ public class ActionUtils {
         LOG.debug("Sending text to secure field: {}", locator);
         WebElement element = wait.untilVisible(locator);
         element.click();
-        clearText(locator);
+        element.clear();
         sleep(200);
+        
+        // Re-acquire element reference after clear to avoid stale element issues
+        element = wait.untilVisible(locator);
         
         // Send text character by character with small delays to prevent iOS input loss
         for (char c : text.toCharArray()) {

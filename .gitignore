@@ -25,4 +25,5 @@ test-output/
 # Environment
 .env
 *.properties.local
+local.properties
 

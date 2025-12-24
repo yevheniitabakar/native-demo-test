@@ -213,9 +213,6 @@ Test results are generated using Allure. Results are written to `build/allure-re
 # Clean previous results (recommended before a new test run)
 ./gradlew cleanAllureResults
 
-# Run tests
-./run_tests.sh android
-
 # Generate and open report in browser
 ./gradlew allureServe
 ```
